@@ -43,7 +43,7 @@ parser.add_argument("--epochs", default=90, type=int,
 					help="Epochs through the data. (default=60)")  
 parser.add_argument("--learning_rate", "-lr", default=0.001, type=float,
 					help="Learning rate of the optimization. (default=0.001)")              
-parser.add_argument("--batch_size", default=2, type=int,
+parser.add_argument("--batch_size", default=8, type=int,
 					help="Batch size for training. (default=16)")
 parser.add_argument("--optimizer", default="SGD", choices=["SGD", "Adadelta", "Adam"],
 					help="Optimizer of choice for training. (default=Adam)")
@@ -88,6 +88,13 @@ def main(options):
 		test_file = '/home/ye/Works/diving/testing_idx.npy'
 		data_folder = '/home/ye/Works/diving/frames'
 		label_file = '/home/ye/Works/diving/overall_scores.npy'
+
+	elif machine == 'peterchin':
+		train_file = '/data/xiang/diving-score/testing_idx.npy'
+		test_file = '/data/xiang/diving-score/testing_idx.npy'
+		data_folder = '/data/xiang/diving-score/frames'            	
+		label_file = '/data/xiang/diving-score/overall_scores.npy' 
+	
 	# elif machine == 'marcc':
 	# 	train_file = './ucfTrainTestlist/trainlist0'+str(split)+'.txt'
 	# 	test_file = './ucfTrainTestlist/testlist0'+str(split)+'.txt'
@@ -221,15 +228,15 @@ def main(options):
 			else:
 				train_output = model(vid_tensor)
 
-			all_train_output = np.append(all_train_output, train_output.data.numpy()[:,0])
-			all_labels = np.append(all_labels, labels.data.numpy())
+			all_train_output = np.append(all_train_output, train_output.data.cpu().numpy()[:,0])
+			all_labels = np.append(all_labels, labels.data.cpu().numpy())
 
 			# print all_train_output, all_labels
 			loss = criterion(train_output, labels)
 			train_loss += loss.data[0]
-			if it%10 == 0:
-				print (train_output.data.numpy()[0][0]), ('-'), (labels.data.numpy()[0]),('  ') ,(train_output.data.numpy()[1][0]), ('-') ,(labels.data.numpy()[1])
-				logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
+			#if it%1 == 0:
+			#	print (train_output.data.cpu().numpy()[0][0]), ('-'), (labels.data.cpu().numpy()[0]),('  ') ,(train_output.data.cpu().numpy()[1][0]), ('-') ,(labels.data.cpu().numpy()[1])
+			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 			# logging.debug("loss at batch {0}: {1}".format(it, loss.data[0]))
 			optimizer.zero_grad()
 			loss.backward()
@@ -272,7 +279,7 @@ def main(options):
 		# logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 		# logging.debug("loss at batch {0}: {1}".format(it, loss.data[0]))
 
-		train_output.data.numpy()[0][0], '-',labels.data.numpy()[0]
+		
 
 
 	test_avg_loss = test_loss / (len(dset_test) / options.batch_size)

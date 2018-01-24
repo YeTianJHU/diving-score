@@ -80,7 +80,7 @@ class divingDataset(Dataset):
 				flow[:,i,:,:] = img
 		else: 
 			downsampe = []
-			for i in range(0, len(images), len(images)/num_frame):
+			for i in range(0, len(images), int(len(images)/num_frame)):
 				downsampe.append(i)
 			downsampe = downsampe[len(downsampe)-num_frame:]
 
