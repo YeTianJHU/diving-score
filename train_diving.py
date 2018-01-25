@@ -92,7 +92,7 @@ def main(options):
 		label_file = '/home/ye/Works/diving-score/overall_scores.npy'
 
 	elif machine == 'peterchin':
-		train_file = '/data/xiang/diving-score/testing_idx.npy'
+		train_file = '/data/xiang/diving-score/training_idx.npy'
 		test_file = '/data/xiang/diving-score/testing_idx.npy'
 		data_folder = '/data/xiang/diving-score/frames'            	
 		label_file = '/data/xiang/diving-score/overall_scores.npy' 
@@ -237,7 +237,7 @@ def main(options):
 			loss = criterion(train_output, labels)
 			train_loss += loss.data[0]
 			#if it%1 == 0:
-			#	print (train_output.data.cpu().numpy()[0][0]), ('-'), (labels.data.cpu().numpy()[0]),('  ') ,(train_output.data.cpu().numpy()[1][0]), ('-') ,(labels.data.cpu().numpy()[1])
+			print (train_output.data.cpu().numpy()[0][0]), ('-'), (labels.data.cpu().numpy()[0])
 			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 			# logging.debug("loss at batch {0}: {1}".format(it, loss.data[0]))
 			optimizer.zero_grad()
@@ -281,38 +281,6 @@ def main(options):
 			loss = criterion(test_output, labels)
 			test_loss += loss.data[0]
 
-			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
-
-		test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
-		# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
-
-		rho, p_val = spearmanr(all_test_output, all_labels)
-		logging.info("Average test loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(test_avg_loss, rho, epoch_i))
-#######################################################################################################################
-		# the last test for visualization
-		model.eval()
-		test_loss = 0.0
-		all_test_output = []
-		all_labels = []
-		for it, test_data in enumerate(test_loader, 0):
-			vid_tensor, labels = test_data
-			if use_cuda:
-				vid_tensor, labels = Variable(vid_tensor).cuda(),  Variable(labels).cuda()
-			else:
-				vid_tensor, labels = Variable(vid_tensor), Variable(labels)
-
-			if options.model == "I3D" or options.model == "P3D":
-				test_output = model(vid_tensor)
-				test_output = test_output[0]
-			else:
-				test_output = model(vid_tensor)
-
-			all_test_output = np.append(all_test_output, test_output.data.cpu().numpy()[:,0])
-			all_labels = np.append(all_labels, labels.data.cpu().numpy())
-
-			loss = criterion(test_output, labels)
-			test_loss += loss.data[0]
-
 			print (test_output.data.cpu().numpy()[0][0]), ('-'), (labels.data.cpu().numpy()[0])
 			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 
@@ -321,6 +289,39 @@ def main(options):
 
 		rho, p_val = spearmanr(all_test_output, all_labels)
 		logging.info("Average test loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(test_avg_loss, rho, epoch_i))
+#######################################################################################################################
+	# the last test for visualization
+	model.eval()
+	test_loss = 0.0
+	all_test_output = []
+	all_labels = []
+	for it, test_data in enumerate(test_loader, 0):
+		vid_tensor, labels = test_data
+		if use_cuda:
+			vid_tensor, labels = Variable(vid_tensor).cuda(),  Variable(labels).cuda()
+		else:
+			vid_tensor, labels = Variable(vid_tensor), Variable(labels)
+
+		if options.model == "I3D" or options.model == "P3D":
+			test_output = model(vid_tensor)
+			test_output = test_output[0]
+		else:
+			test_output = model(vid_tensor)
+
+		all_test_output = np.append(all_test_output, test_output.data.cpu().numpy()[:,0])
+		all_labels = np.append(all_labels, labels.data.cpu().numpy())
+
+		loss = criterion(test_output, labels)
+		test_loss += loss.data[0]
+
+		print (test_output.data.cpu().numpy()[0][0]), ('-'), (labels.data.cpu().numpy()[0])
+		logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
+
+	test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
+	# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
+
+	rho, p_val = spearmanr(all_test_output, all_labels)
+	logging.info("Average test loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(test_avg_loss, rho, epoch_i))
 
 if __name__ == "__main__":
 	ret = parser.parse_known_args()
