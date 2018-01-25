@@ -41,8 +41,8 @@ clf = SVR(C=1.0, epsilon=0.2)
 clf.fit(x_train, y_train) 
 y_predit = clf.predict(x_test)
 
-print (y_test)
-print (y_predit)
+for i in range(len(y_test)):
+	print (y_test[i]'-'y_predit[i])
 
 rho, p_val = spearmanr(y_test, y_predit)
 print (rho)
