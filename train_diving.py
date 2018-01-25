@@ -167,6 +167,7 @@ def main(options):
 
 	if use_cuda > 0:
 		model.cuda()
+		model = nn.DataParallel(model, devices=gpuid)
 
 	start_epoch = 0
 
