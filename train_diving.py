@@ -39,7 +39,7 @@ parser.add_argument("--load", default=0, type=int,
 					help="Load saved network weights. 0 represent don't load; other number represent the model number")
 parser.add_argument("--save", default=0, type=int,
 					help="Save network weights. 0 represent don't save; number represent model number")  
-parser.add_argument("--epochs", default=90, type=int,
+parser.add_argument("--epochs", default=65, type=int,
 					help="Epochs through the data. (default=60)")  
 parser.add_argument("--learning_rate", "-lr", default=0.001, type=float,
 					help="Learning rate of the optimization. (default=0.001)")              
@@ -65,6 +65,8 @@ parser.add_argument("--use_trained_model", default=1, type=int,
 					help="whether use the pre-trained model on kinetics or not")
 parser.add_argument("--model", default="P3D",  choices=["P3D", "C3D","I3D"],
 					help="which machine to run the code. choice from ye_home and marcc")
+parser.add_argument("--random", default=False,  type=bool,
+					help="random sapmling in training")
 
 
 def adjust_learning_rate(optimizer, epoch, lr_steps):
@@ -116,9 +118,9 @@ def main(options):
 										transforms.ToTensor()
 										])	
 	
-	dset_train = divingDataset(data_folder, train_file, label_file, transformations, size=options.size)
+	dset_train = divingDataset(data_folder, train_file, label_file, transformations, random, size=options.size)
 
-	dset_test = divingDataset(data_folder, test_file, label_file, transformations, size=options.size)
+	dset_test = divingDataset(data_folder, test_file, label_file, transformations, random, size=options.size)
 
 	train_loader = DataLoader(dset_train,
 							  batch_size = options.batch_size,
@@ -221,7 +223,7 @@ def main(options):
 
 			model.train()
 
-			if options.model == "I3D":
+			if options.model == "I3D" or options.model == "P3D":
 				train_output = model(vid_tensor)
 				train_output = train_output[0]
 			else:
@@ -266,7 +268,7 @@ def main(options):
 			else:
 				vid_tensor, labels = Variable(vid_tensor), Variable(labels)
 
-			if options.model == "I3D":
+			if options.model == "I3D" or options.model == "P3D":
 				test_output = model(vid_tensor)
 				test_output = test_output[0]
 			else:
@@ -278,6 +280,39 @@ def main(options):
 			loss = criterion(test_output, labels)
 			test_loss += loss.data[0]
 
+			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
+
+		test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
+		# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
+
+		rho, p_val = spearmanr(all_test_output, all_labels)
+		logging.info("Average test loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(test_avg_loss, rho, epoch_i))
+#######################################################################################################################
+		# the last test for visualization
+		model.eval()
+		test_loss = 0.0
+		all_test_output = []
+		all_labels = []
+		for it, test_data in enumerate(test_loader, 0):
+			vid_tensor, labels = test_data
+			if use_cuda:
+				vid_tensor, labels = Variable(vid_tensor).cuda(),  Variable(labels).cuda()
+			else:
+				vid_tensor, labels = Variable(vid_tensor), Variable(labels)
+
+			if options.model == "I3D" or options.model == "P3D":
+				test_output = model(vid_tensor)
+				test_output = test_output[0]
+			else:
+				test_output = model(vid_tensor)
+
+			all_test_output = np.append(all_test_output, test_output.data.cpu().numpy()[:,0])
+			all_labels = np.append(all_labels, labels.data.cpu().numpy())
+
+			loss = criterion(test_output, labels)
+			test_loss += loss.data[0]
+
+			print (test_output.data.cpu().numpy()[0][0]), ('-'), (labels.data.cpu().numpy()[0])
 			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 
 		test_avg_loss = test_loss / (len(dset_test) / options.batch_size)

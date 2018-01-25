@@ -268,11 +268,12 @@ class P3D(nn.Module):
 		x = self.avgpool(x)
 
 		x = x.view(-1,self.fc.in_features)
+		feature = x
 		x = self.fc(self.dropout(x))
 		# x = self.dropout(x)
 		# x = self.softmax(x)
 
-		return x
+		return x, feature
 
 
 def P3D63(**kwargs):
