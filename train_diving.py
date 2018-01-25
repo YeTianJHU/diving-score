@@ -84,10 +84,10 @@ def main(options):
 
 	# Path to the directories of features and labels
 	if machine == 'ye_home':
-		train_file = '/home/ye/Works/diving/training_idx.npy'
-		test_file = '/home/ye/Works/diving/testing_idx.npy'
-		data_folder = '/home/ye/Works/diving/frames'
-		label_file = '/home/ye/Works/diving/overall_scores.npy'
+		train_file = '/home/ye/Works/diving-score/training_idx.npy'
+		test_file = '/home/ye/Works/diving-score/testing_idx.npy'
+		data_folder = '/home/ye/Works/diving-score/frames'
+		label_file = '/home/ye/Works/diving-score/overall_scores.npy'
 
 	elif machine == 'peterchin':
 		train_file = '/data/xiang/diving-score/testing_idx.npy'
@@ -209,7 +209,6 @@ def main(options):
 			scheduler.step()
 
 		train_loss = 0.0
-		correct = 0.0
 		all_train_output = []
 		all_labels = []
 		for it, train_data in enumerate(train_loader, 0):
@@ -255,37 +254,37 @@ def main(options):
 				}, 'checkpoint'+str(options.save)+'.tar' )
 
 
-	# # main test loop
-	model.eval()
-	test_loss = 0.0
-	correct = 0.0
-	for it, test_data in enumerate(test_loader, 0):
-		vid_tensor, labels = test_data
-		if use_cuda:
-			vid_tensor, labels = Variable(vid_tensor).cuda(),  Variable(labels).cuda()
-		else:
-			vid_tensor, labels = Variable(vid_tensor), Variable(labels)
+		# # main test loop
+		model.eval()
+		test_loss = 0.0
+		all_test_output = []
+		all_labels = []
+		for it, test_data in enumerate(test_loader, 0):
+			vid_tensor, labels = test_data
+			if use_cuda:
+				vid_tensor, labels = Variable(vid_tensor).cuda(),  Variable(labels).cuda()
+			else:
+				vid_tensor, labels = Variable(vid_tensor), Variable(labels)
 
-		if options.model == "I3D":
-			test_output = model(vid_tensor)
-			test_output = test_output[0]
-		else:
-			test_output = model(vid_tensor)
-			test_output = torch.nn.Softmax(dim=1)(test_output)
+			if options.model == "I3D":
+				test_output = model(vid_tensor)
+				test_output = test_output[0]
+			else:
+				test_output = model(vid_tensor)
 
-		loss = criterion(test_output, labels)
-		test_loss += loss.data[0]
+			all_test_output = np.append(all_test_output, test_output.data.cpu().numpy()[:,0])
+			all_labels = np.append(all_labels, labels.data.cpu().numpy())
 
-		# logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
-		# logging.debug("loss at batch {0}: {1}".format(it, loss.data[0]))
+			loss = criterion(test_output, labels)
+			test_loss += loss.data[0]
 
-		
+			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 
+		test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
+		# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
 
-	test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
-	test_accuracy = (correct / len(dset_test))
-	logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
-	logging.info("Accuracy is {0} ".format(test_accuracy))
+		rho, p_val = spearmanr(all_test_output, all_labels)
+		logging.info("Average test loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(test_avg_loss, rho, epoch_i))
 
 if __name__ == "__main__":
 	ret = parser.parse_known_args()
