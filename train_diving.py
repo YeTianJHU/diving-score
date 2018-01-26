@@ -237,7 +237,7 @@ def main(options):
 			loss = criterion(train_output, labels)
 			train_loss += loss.data[0]
 			#if it%1 == 0:
-			print (train_output.data.cpu().numpy()[0][0]), ('-'), (labels.data.cpu().numpy()[0])
+			print (train_output.data.cpu().numpy()[0][0], '-', labels.data.cpu().numpy()[0])
 			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 			# logging.debug("loss at batch {0}: {1}".format(it, loss.data[0]))
 			optimizer.zero_grad()
@@ -281,8 +281,6 @@ def main(options):
 			loss = criterion(test_output, labels)
 			test_loss += loss.data[0]
 
-			for i in range(len(labels.data.cpu().numpy())):
-				print (test_output.data.cpu().numpy()[i][0]), ('-'), (labels.data.cpu().numpy()[i])
 			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 
 		test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
@@ -315,7 +313,9 @@ def main(options):
 		loss = criterion(test_output, labels)
 		test_loss += loss.data[0]
 
-		print (test_output.data.cpu().numpy()[0][0]), ('-'), (labels.data.cpu().numpy()[0])
+		for i in range(len(labels.data.cpu().numpy())):
+			print (test_output.data.cpu().numpy()[i][0], '-', labels.data.cpu().numpy()[i])
+
 		logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 
 	test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
