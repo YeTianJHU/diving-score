@@ -51,8 +51,8 @@ parser.add_argument("--gpuid", default=[], nargs='+', type=str,
 					help="ID of gpu device to use. Empty implies cpu usage.")
 parser.add_argument("--size", default=160, type=int,
 					help="size of images.")
-parser.add_argument("--machine", default='ye_home', type=str,
-					help="which machine to run the code. choice from ye_home and marcc")
+parser.add_argument("--task", default='score', type=str,
+					help="task to be overall score or the difficulity level")
 parser.add_argument("--only_last_layer", default=0, type=int,
 					help="whether choose to freezen the parameters for all the layers except the linear layer on the pre-trained model")
 parser.add_argument("--normalize", default=1, type=int,
@@ -82,26 +82,15 @@ def main(options):
 	# Path configuration
 
 
-	machine =options.machine
 
 	# Path to the directories of features and labels
-	if machine == 'ye_home':
-		train_file = '/home/ye/Works/diving-score/training_idx.npy'
-		test_file = '/home/ye/Works/diving-score/testing_idx.npy'
-		data_folder = '/home/ye/Works/diving-score/frames'
-		label_file = '/home/ye/Works/diving-score/overall_scores.npy'
-
-	elif machine == 'peterchin':
-		train_file = '/data/xiang/diving-score/training_idx.npy'
-		test_file = '/data/xiang/diving-score/testing_idx.npy'
-		data_folder = '/data/xiang/diving-score/frames'            	
-		label_file = '/data/xiang/diving-score/overall_scores.npy' 
-	
-	# elif machine == 'marcc':
-	# 	train_file = './ucfTrainTestlist/trainlist0'+str(split)+'.txt'
-	# 	test_file = './ucfTrainTestlist/testlist0'+str(split)+'.txt'
-	# 	data_folder = './frames'
-	# 	label_file = './ucfTrainTestlist/classInd.txt'
+	train_file = './training_idx.npy'
+	test_file = './testing_idx.npy'
+	data_folder = './frames'
+	if options.task == "score":
+		label_file = './overall_scores.npy'
+	else:
+		label_file = './difficulty_level.npy'
 
 	if options.model=="C3D":
 		options.size = 112
@@ -167,7 +156,7 @@ def main(options):
 
 	if use_cuda > 0:
 		model.cuda()
-		model = nn.DataParallel(model, devices=gpuid)
+	#	model = nn.DataParallel(model, devices=gpuid)
 
 	start_epoch = 0
 
@@ -236,8 +225,8 @@ def main(options):
 			# print all_train_output, all_labels
 			loss = criterion(train_output, labels)
 			train_loss += loss.data[0]
-			#if it%1 == 0:
-			print (train_output.data.cpu().numpy()[0][0], '-', labels.data.cpu().numpy()[0])
+			if it%8 == 0:
+				print (train_output.data.cpu().numpy()[0][0], '-', labels.data.cpu().numpy()[0])
 			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 			# logging.debug("loss at batch {0}: {1}".format(it, loss.data[0]))
 			optimizer.zero_grad()
@@ -322,7 +311,7 @@ def main(options):
 	# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
 
 	rho, p_val = spearmanr(all_test_output, all_labels)
-	logging.info("Average test loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(test_avg_loss, rho, epoch_i))
+	logging.info("Average test loss value per instance is {0}, the corr is {1}".format(test_avg_loss, rho))
 
 if __name__ == "__main__":
 	ret = parser.parse_known_args()

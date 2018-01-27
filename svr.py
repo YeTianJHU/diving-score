@@ -37,12 +37,23 @@ for i in training_idx:
 	y_test.append(label[i-1])
 
 
-clf = SVR(C=1.0, epsilon=0.2)
-clf.fit(x_train, y_train) 
+clf = SVR(C=9.1, epsilon=0.1)
+clf.fit(x_train, y_train)
 y_predit = clf.predict(x_test)
-
-for i in range(len(y_test)):
-	print (y_test[i]'-'y_predit[i])
 
 rho, p_val = spearmanr(y_test, y_predit)
 print (rho)
+
+
+for i in range(len(y_test)):
+	print (y_test[i],'-',y_predit[i])
+
+#for i in range(1,100,10):
+ #       for j in range(5, 100, 5):
+
+  #              clf = SVR(C=i*0.1, epsilon=j*0.01)
+  #              clf.fit(x_train, y_train)
+  #              y_predit = clf.predict(x_test)
+
+   #             rho, p_val = spearmanr(y_test, y_predit)
+    #            print (i*0.1, j*0.01, rho)
