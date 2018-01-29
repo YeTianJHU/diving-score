@@ -309,7 +309,7 @@ def main(options):
 			test_loss += loss.data[0]
 
 			for i in range(len(labels.data.cpu().numpy())):
-				print (test_output.data.cpu().numpy()[i][0], '-', labels.data.cpu().numpy()[i])
+				logging.info("{0}-{1}".format(test_output.data.cpu().numpy()[i][0], labels.data.cpu().numpy()[i]))
 
 			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 
@@ -360,7 +360,7 @@ def main(options):
 			# test_loss += loss.data[0]
 
 			for i in range(len(labels.data.cpu().numpy())):
-				print (score, '-', labels.data.cpu().numpy()[i])
+				logging.info("{0}-{1}".format(test_output.data.cpu().numpy()[i][0], labels.data.cpu().numpy()[i]))
 
 			# logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 
