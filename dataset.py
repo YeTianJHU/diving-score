@@ -24,7 +24,7 @@ import csv
 # import skvideo.io
 
 class divingDataset(Dataset):
-	def __init__(self, data_folder, data_file, label_file, transform, random=False, num_frame=16, channel=3, size=160):
+	def __init__(self, data_folder, data_file, label_file, transform, test=False, random=False, num_frame=16, channel=3, size=160):
 
 		self.data_folder = data_folder
 		self.transform = transform
@@ -34,6 +34,7 @@ class divingDataset(Dataset):
 		self.video_name = np.load(data_file)
 		self.label = np.load(label_file)
 		self.random = random
+		self.test = test
 
 
 		
@@ -43,13 +44,18 @@ class divingDataset(Dataset):
 		# print video_name
 		video_path = os.path.join(self.data_folder, video_name)
 
-		video_tensor = self.get_video_tensor(video_path, self.num_frame, self.channel, self.size)
+		if not self.test:
 
-		labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
+			video_tensor = self.get_video_tensor(video_path, self.num_frame, self.channel, self.size, self.random)
 
-		return video_tensor, labels
-		# except:
-		# 	return torch.FloatTensor(self.channel,self.num_frame,self.size,self.size), torch.FloatTensor(self.num_labels)
+			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
+
+			return video_tensor, labels
+		else:
+			video_tensor, num_tensor = self.get_test_tensor(video_path, self.num_frame, self.channel, self.size)
+			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
+
+			return video_tensor, num_tensor, labels
 
 	def __len__(self):
 		return len(self.video_name)
@@ -68,7 +74,7 @@ class divingDataset(Dataset):
 
 		return these_files
 
-	def get_video_tensor(self, dir, num_frame, channel, size):
+	def get_video_tensor(self, dir, num_frame, channel, size, random):
 		images = self.collect_files(dir)
 		flow = torch.FloatTensor(channel,num_frame,size,size)
 		if random==True:
@@ -91,3 +97,27 @@ class divingDataset(Dataset):
 				flow[:,idx,:,:] = img
 		return flow
 
+	def get_test_tensor(self, dir, num_frame, channel, size):
+		images = self.collect_files(dir)
+		flow = torch.FloatTensor(channel,len(images),size,size)
+
+		for i in range(len(images)):
+			img = Image.open(images[i])
+			img = img.convert('RGB')
+			img = self.transform(img)
+			flow[:,i,:,:] = img
+
+		num_feature = int(len(images)/num_frame)
+
+		res = len(images)%num_frame
+		downsampe = []
+		for i in range(res/2, len(images), num_frame/2):
+			downsampe.append(i)
+
+		all_flow = []
+
+		for i in range(0,len(downsampe)-2):
+			vid_tensor = flow[:,downsampe[i]:downsampe[i+2],:,:]
+			all_flow.append(vid_tensor)
+
+		return all_flow, len(downsampe)-2

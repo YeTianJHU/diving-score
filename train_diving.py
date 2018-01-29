@@ -67,7 +67,8 @@ parser.add_argument("--model", default="P3D",  choices=["P3D", "C3D","I3D"],
 					help="which machine to run the code. choice from ye_home and marcc")
 parser.add_argument("--random", default=False,  type=bool,
 					help="random sapmling in training")
-
+parser.add_argument("--test", default=False,  type=bool,
+					help="whether get into the whole test mode")
 
 def adjust_learning_rate(optimizer, epoch, lr_steps):
 	"""Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
@@ -109,7 +110,11 @@ def main(options):
 	
 	dset_train = divingDataset(data_folder, train_file, label_file, transformations, random, size=options.size)
 
-	dset_test = divingDataset(data_folder, test_file, label_file, transformations, random, size=options.size)
+	if options.test:
+		dset_test = divingDataset(data_folder, test_file, label_file, transformations, test=True, size=options.size)
+		options.batch_size = 1
+	else:
+		dset_test = divingDataset(data_folder, test_file, label_file, transformations, random, size=options.size)
 
 	train_loader = DataLoader(dset_train,
 							  batch_size = options.batch_size,
@@ -190,63 +195,96 @@ def main(options):
 
 	scheduler = StepLR(optimizer, step_size=options.lr_steps[0], gamma=0.1)
 
-	# main training loop
-	# last_dev_avg_loss = float("inf")
-	for epoch_i in range(start_epoch, options.epochs):
-		logging.info("At {0}-th epoch.".format(epoch_i))
-		
-		if len(options.lr_steps)>0 and options.use_policy and options.optimizer=="SGD":
-				adjust_learning_rate(optimizer, epoch_i, options.lr_steps)
-		else:
-			scheduler.step()
-
-		train_loss = 0.0
-		all_train_output = []
-		all_labels = []
-		for it, train_data in enumerate(train_loader, 0):
-			vid_tensor, labels = train_data
-
-			if use_cuda:
-				vid_tensor, labels = Variable(vid_tensor).cuda(),  Variable(labels).cuda()
-			else:
-				vid_tensor, labels = Variable(vid_tensor), Variable(labels)
-
-			model.train()
-
-			if options.model == "I3D" or options.model == "P3D":
-				train_output = model(vid_tensor)
-				train_output = train_output[0]
-			else:
-				train_output = model(vid_tensor)
-
-			all_train_output = np.append(all_train_output, train_output.data.cpu().numpy()[:,0])
-			all_labels = np.append(all_labels, labels.data.cpu().numpy())
-
-			# print all_train_output, all_labels
-			loss = criterion(train_output, labels)
-			train_loss += loss.data[0]
-			if it%8 == 0:
-				print (train_output.data.cpu().numpy()[0][0], '-', labels.data.cpu().numpy()[0])
-			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
-			# logging.debug("loss at batch {0}: {1}".format(it, loss.data[0]))
-			optimizer.zero_grad()
-			loss.backward()
-			optimizer.step()
-
+	if not options.test:
+		# main training loop
+		# last_dev_avg_loss = float("inf")
+		for epoch_i in range(start_epoch, options.epochs):
+			logging.info("At {0}-th epoch.".format(epoch_i))
 			
-		train_avg_loss = train_loss / (len(dset_train) / options.batch_size)
-		rho, p_val = spearmanr(all_train_output, all_labels)
-		logging.info("Average training loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(train_avg_loss, rho, epoch_i))
+			if len(options.lr_steps)>0 and options.use_policy and options.optimizer=="SGD":
+					adjust_learning_rate(optimizer, epoch_i, options.lr_steps)
+			else:
+				scheduler.step()
 
-		if options.save:
-			torch.save({
-				'epoch': epoch_i + 1,
-				'state_dict': model.state_dict(),
-				'optimizer' : optimizer.state_dict(),
-				}, 'checkpoint'+str(options.save)+'.tar' )
+			train_loss = 0.0
+			all_train_output = []
+			all_labels = []
+			for it, train_data in enumerate(train_loader, 0):
+				vid_tensor, labels = train_data
+
+				if use_cuda:
+					vid_tensor, labels = Variable(vid_tensor).cuda(),  Variable(labels).cuda()
+				else:
+					vid_tensor, labels = Variable(vid_tensor), Variable(labels)
+
+				model.train()
+
+				if options.model == "I3D" or options.model == "P3D":
+					train_output = model(vid_tensor)
+					train_output = train_output[0]
+				else:
+					train_output = model(vid_tensor)
+
+				all_train_output = np.append(all_train_output, train_output.data.cpu().numpy()[:,0])
+				all_labels = np.append(all_labels, labels.data.cpu().numpy())
+
+				# print all_train_output, all_labels
+				loss = criterion(train_output, labels)
+				train_loss += loss.data[0]
+				if it%8 == 0:
+					print (train_output.data.cpu().numpy()[0][0], '-', labels.data.cpu().numpy()[0])
+				logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
+				# logging.debug("loss at batch {0}: {1}".format(it, loss.data[0]))
+				optimizer.zero_grad()
+				loss.backward()
+				optimizer.step()
+
+				
+			train_avg_loss = train_loss / (len(dset_train) / options.batch_size)
+			rho, p_val = spearmanr(all_train_output, all_labels)
+			logging.info("Average training loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(train_avg_loss, rho, epoch_i))
+
+			if options.save:
+				torch.save({
+					'epoch': epoch_i + 1,
+					'state_dict': model.state_dict(),
+					'optimizer' : optimizer.state_dict(),
+					}, 'checkpoint'+str(options.save)+'.tar' )
 
 
-		# # main test loop
+			# # main test loop
+			model.eval()
+			test_loss = 0.0
+			all_test_output = []
+			all_labels = []
+			for it, test_data in enumerate(test_loader, 0):
+				vid_tensor, labels = test_data
+				if use_cuda:
+					vid_tensor, labels = Variable(vid_tensor).cuda(),  Variable(labels).cuda()
+				else:
+					vid_tensor, labels = Variable(vid_tensor), Variable(labels)
+
+				if options.model == "I3D" or options.model == "P3D":
+					test_output = model(vid_tensor)
+					test_output = test_output[0]
+				else:
+					test_output = model(vid_tensor)
+
+				all_test_output = np.append(all_test_output, test_output.data.cpu().numpy()[:,0])
+				all_labels = np.append(all_labels, labels.data.cpu().numpy())
+
+				loss = criterion(test_output, labels)
+				test_loss += loss.data[0]
+
+				logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
+
+			test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
+			# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
+
+			rho, p_val = spearmanr(all_test_output, all_labels)
+			logging.info("Average test loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(test_avg_loss, rho, epoch_i))
+	#######################################################################################################################
+		# the last test for visualization
 		model.eval()
 		test_loss = 0.0
 		all_test_output = []
@@ -270,48 +308,67 @@ def main(options):
 			loss = criterion(test_output, labels)
 			test_loss += loss.data[0]
 
+			for i in range(len(labels.data.cpu().numpy())):
+				print (test_output.data.cpu().numpy()[i][0], '-', labels.data.cpu().numpy()[i])
+
 			logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 
 		test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
 		# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
 
 		rho, p_val = spearmanr(all_test_output, all_labels)
-		logging.info("Average test loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(test_avg_loss, rho, epoch_i))
-#######################################################################################################################
-	# the last test for visualization
-	model.eval()
-	test_loss = 0.0
-	all_test_output = []
-	all_labels = []
-	for it, test_data in enumerate(test_loader, 0):
-		vid_tensor, labels = test_data
-		if use_cuda:
-			vid_tensor, labels = Variable(vid_tensor).cuda(),  Variable(labels).cuda()
-		else:
-			vid_tensor, labels = Variable(vid_tensor), Variable(labels)
+		logging.info("Average test loss value per instance is {0}, the corr is {1}".format(test_avg_loss, rho))
 
-		if options.model == "I3D" or options.model == "P3D":
-			test_output = model(vid_tensor)
-			test_output = test_output[0]
-		else:
-			test_output = model(vid_tensor)
+	else:
+		# the last test for visualization
+		model.eval()
+		test_loss = 0.0
+		all_test_output = []
+		all_labels = []
+		for it, test_data in enumerate(test_loader, 0):
+			vid_tensors, num_tensor, labels = test_data
 
-		all_test_output = np.append(all_test_output, test_output.data.cpu().numpy()[:,0])
-		all_labels = np.append(all_labels, labels.data.cpu().numpy())
+			if use_cuda:
+				labels = Variable(labels).cuda()
+			else:
+				labels = Variable(labels)
 
-		loss = criterion(test_output, labels)
-		test_loss += loss.data[0]
+			score = 0.0
 
-		for i in range(len(labels.data.cpu().numpy())):
-			print (test_output.data.cpu().numpy()[i][0], '-', labels.data.cpu().numpy()[i])
+			for i in range(len(vid_tensors)):
+				vid_tensor = vid_tensors[i]
+				if use_cuda:
+					vid_tensor = Variable(vid_tensor).cuda()
+				else:
+					vid_tensor = Variable(vid_tensor)
 
-		logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
+				if options.model == "I3D" or options.model == "P3D":
+					test_output = model(vid_tensor)
+					test_output = test_output[0]
+				else:
+					test_output = model(vid_tensor)
 
-	test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
-	# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
+				score += test_output.data.cpu().numpy()[:,0][0]
 
-	rho, p_val = spearmanr(all_test_output, all_labels)
-	logging.info("Average test loss value per instance is {0}, the corr is {1}".format(test_avg_loss, rho))
+			score = score/int(num_tensor.numpy())
+
+			all_test_output = np.append(all_test_output, score)
+			all_labels = np.append(all_labels, labels.data.cpu().numpy())
+
+			# score = torch.autograd.Variable(torch.from_numpy(score))
+			# loss = criterion(score, labels)
+			# test_loss += loss.data[0]
+
+			for i in range(len(labels.data.cpu().numpy())):
+				print (score, '-', labels.data.cpu().numpy()[i])
+
+			# logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
+
+		# test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
+		# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
+
+		rho, p_val = spearmanr(all_test_output, all_labels)
+		logging.info("Average test loss value per instance is {0}, the corr is {1}".format(test_avg_loss, rho))
 
 if __name__ == "__main__":
 	ret = parser.parse_known_args()
