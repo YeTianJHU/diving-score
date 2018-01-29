@@ -111,7 +111,7 @@ class divingDataset(Dataset):
 
 		res = len(images)%num_frame
 		downsampe = []
-		for i in range(res/2, len(images), num_frame/2):
+		for i in range(int(res/2), len(images), int(num_frame/2)):
 			downsampe.append(i)
 
 		all_flow = []
