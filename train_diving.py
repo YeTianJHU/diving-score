@@ -110,7 +110,7 @@ def main(options):
 	
 	dset_train = divingDataset(data_folder, train_file, label_file, transformations, random, size=options.size)
 
-	if options.test:
+	if options.test==True:
 		dset_test = divingDataset(data_folder, test_file, label_file, transformations, test=True, size=options.size)
 		options.batch_size = 1
 	else:
