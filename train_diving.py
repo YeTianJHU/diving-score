@@ -24,6 +24,7 @@ from PIL import Image
 from torchvision.transforms import ToPILImage
 from torch.optim.lr_scheduler import StepLR
 from p3d_model import P3D199, C3D, get_optim_policies
+from i3dpt import Unit3Dpy, I3D
 from utils import transfer_model
 from dataset import divingDataset
 #from visualize import make_dot
@@ -41,7 +42,7 @@ parser.add_argument("--save", default=0, type=int,
 					help="Save network weights. 0 represent don't save; number represent model number")  
 parser.add_argument("--epochs", default=65, type=int,
 					help="Epochs through the data. (default=60)")  
-parser.add_argument("--learning_rate", "-lr", default=0.001, type=float,
+parser.add_argument("--learning_rate", "-lr", default=0.0001, type=float,
 					help="Learning rate of the optimization. (default=0.001)")              
 parser.add_argument("--batch_size", default=8, type=int,
 					help="Batch size for training. (default=16)")
@@ -110,7 +111,7 @@ def main(options):
 	
 	dset_train = divingDataset(data_folder, train_file, label_file, transformations, random, size=options.size)
 
-	if options.test==True:
+	if options.test == True:
 		dset_test = divingDataset(data_folder, test_file, label_file, transformations, test=True, size=options.size)
 		options.batch_size = 1
 	else:
@@ -150,7 +151,9 @@ def main(options):
 			model = I3D(num_classes=101, modality='rgb')
 	else:
 		logging.error("No such model: {0}".format(options.model))
-
+		
+	for param in model.parameters():
+			param.requires_grad = True
 
 	if options.only_last_layer:
 		for param in model.parameters():
