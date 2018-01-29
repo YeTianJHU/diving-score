@@ -44,18 +44,18 @@ class divingDataset(Dataset):
 		# print video_name
 		video_path = os.path.join(self.data_folder, video_name)
 
-		if not self.test:
+		if self.test:
 
+			video_tensor, num_tensor = self.get_test_tensor(video_path, self.num_frame, self.channel, self.size)
+			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
+
+			return video_tensor, num_tensor, labels
+		else:
 			video_tensor = self.get_video_tensor(video_path, self.num_frame, self.channel, self.size, self.random)
 
 			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
 
 			return video_tensor, labels
-		else:
-			video_tensor, num_tensor = self.get_test_tensor(video_path, self.num_frame, self.channel, self.size)
-			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
-
-			return video_tensor, num_tensor, labels
 
 	def __len__(self):
 		return len(self.video_name)
