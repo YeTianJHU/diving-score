@@ -45,7 +45,6 @@ class divingDataset(Dataset):
 		video_path = os.path.join(self.data_folder, video_name)
 
 		if self.test:
-			print 'test', self.test
 			video_tensor, num_tensor = self.get_test_tensor(video_path, self.num_frame, self.channel, self.size)
 			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
 

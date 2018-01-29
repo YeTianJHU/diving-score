@@ -368,7 +368,7 @@ def main(options):
 		# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
 
 		rho, p_val = spearmanr(all_test_output, all_labels)
-		logging.info("Average test loss value per instance is {0}, the corr is {1}".format(test_avg_loss, rho))
+		logging.info("the corr is {0}".format(rho))
 
 if __name__ == "__main__":
 	ret = parser.parse_known_args()
