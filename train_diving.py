@@ -114,7 +114,7 @@ def main(options):
 		dset_test = divingDataset(data_folder, test_file, label_file, transformations, test=True, size=options.size)
 		options.batch_size = 1
 	else:
-		dset_test = divingDataset(data_folder, test_file, label_file, transformations, random, size=options.size)
+		dset_test = divingDataset(data_folder, test_file, label_file, transformations, random, test=False, size=options.size)
 
 	train_loader = DataLoader(dset_train,
 							  batch_size = options.batch_size,

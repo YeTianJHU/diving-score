@@ -24,7 +24,7 @@ import csv
 # import skvideo.io
 
 class divingDataset(Dataset):
-	def __init__(self, data_folder, data_file, label_file, transform, test=False, random=False, num_frame=16, channel=3, size=160):
+	def __init__(self, data_folder, data_file, label_file, transform, random=False, test=False, num_frame=16, channel=3, size=160):
 
 		self.data_folder = data_folder
 		self.transform = transform
@@ -45,7 +45,7 @@ class divingDataset(Dataset):
 		video_path = os.path.join(self.data_folder, video_name)
 
 		if self.test:
-
+			print 'test', self.test
 			video_tensor, num_tensor = self.get_test_tensor(video_path, self.num_frame, self.channel, self.size)
 			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
 
