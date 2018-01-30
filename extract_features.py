@@ -74,10 +74,10 @@ model = transfer_model(model,num_classes=1, model_type=model_type)
 if use_cuda > 0:
 	model.cuda()
 
-# logging.info("=> loading checkpoint"+str(load)+".tar")
-# checkpoint = torch.load('checkpoint'+str(load)+'.tar')
-# start_epoch = checkpoint['epoch']
-# model.load_state_dict(checkpoint['state_dict'])
+logging.info("=> loading checkpoint"+str(load)+".tar")
+checkpoint = torch.load('checkpoint'+str(load)+'.tar')
+start_epoch = checkpoint['epoch']
+model.load_state_dict(checkpoint['state_dict'])
 model.eval()
 
 
@@ -121,7 +121,8 @@ for video in videos:
 		test_output = model(vid_tensor)
 		feature = test_output[1]
 		np_feature =  feature.data.cpu().numpy()[0]
-		features.append(np_feature)
+		score = test_output[0]
+		features.append([np_feature, score])
 
 	features = np.array(features)
 
