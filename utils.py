@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import math
 from functools import partial
+from i3dpt import Unit3Dpy, I3D
 
 def transfer_model(model,num_classes,model_type):
 	if model_type=="P3D":

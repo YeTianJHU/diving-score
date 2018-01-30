@@ -35,8 +35,8 @@ channel = 3
 size = 160
 model_input_length = 16
 model_type = 'P3D'
-use_cuda = False
-load = 1
+use_cuda = True
+load = 2
 
 def collect_files(dir_name, file_ext=".jpg", sort_files=True):
 	allfiles = [os.path.join(dir_name,f) for f in listdir(dir_name) if isfile(join(dir_name,f))]
@@ -105,7 +105,7 @@ for video in videos:
 
 	res = len(images)%model_input_length
 	downsampe = []
-	for i in range(res/2, len(images), model_input_length/2):
+	for i in range(int(res/2), len(images), int(model_input_length/2)):
 		downsampe.append(i)
 
 	features = []
