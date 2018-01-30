@@ -24,7 +24,7 @@ from PIL import Image
 from torchvision.transforms import ToPILImage
 from torch.optim.lr_scheduler import StepLR
 from p3d_model import P3D199, C3D, get_optim_policies
-from i3dpt import Unit3Dpy, I3D
+# from i3dpt import Unit3Dpy, I3D
 from utils import transfer_model
 from dataset import divingDataset
 #from visualize import make_dot
@@ -109,13 +109,13 @@ def main(options):
 										transforms.ToTensor()
 										])	
 	
-	dset_train = divingDataset(data_folder, train_file, label_file, transformations, random, size=options.size)
+	dset_train = divingDataset(data_folder, train_file, label_file, transformations, random=options.random, size=options.size)
 
 	if options.test == True:
 		dset_test = divingDataset(data_folder, test_file, label_file, transformations, test=True, size=options.size)
 		options.batch_size = 1
 	else:
-		dset_test = divingDataset(data_folder, test_file, label_file, transformations, random, test=False, size=options.size)
+		dset_test = divingDataset(data_folder, test_file, label_file, transformations, random=options.random, test=False, size=options.size)
 
 	train_loader = DataLoader(dset_train,
 							  batch_size = options.batch_size,

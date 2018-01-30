@@ -37,23 +37,29 @@ for i in training_idx:
 	y_test.append(label[i-1])
 
 
-clf = SVR(C=9.1, epsilon=0.1)
-clf.fit(x_train, y_train)
-y_predit = clf.predict(x_test)
+# clf = SVR(C=9.1, epsilon=0.1)
+# clf.fit(x_train, y_train)
+# y_predit = clf.predict(x_test)
 
-rho, p_val = spearmanr(y_test, y_predit)
-print (rho)
+# rho, p_val = spearmanr(y_test, y_predit)
+# print (rho)
 
 
-for i in range(len(y_test)):
-	print (y_test[i],'-',y_predit[i])
+# for i in range(len(y_test)):
+# 	print (y_test[i],'-',y_predit[i])
 
-#for i in range(1,100,10):
- #       for j in range(5, 100, 5):
+c_range = [0.01, 0.1, 1, 10 ,100]
+e_range = [0.01, 0.1, 1, 10 ,100]
+k_range = ['linear', 'poly', 'rbf', 'sigmoid', 'precomputed']
 
-  #              clf = SVR(C=i*0.1, epsilon=j*0.01)
-  #              clf.fit(x_train, y_train)
-  #              y_predit = clf.predict(x_test)
+for k in k_range:
+	for i in c_range:
+		   for j in e_range:
 
-   #             rho, p_val = spearmanr(y_test, y_predit)
-    #            print (i*0.1, j*0.01, rho)
+				   clf = SVR(C=i, epsilon=j,kernel=k)
+				   clf.fit(x_train, y_train)
+				   y_predit = clf.predict(x_test)
+
+				   rho, p_val = spearmanr(y_test, y_predit)
+				   print k_range, i, j, rho
+	print ''

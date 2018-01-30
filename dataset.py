@@ -77,6 +77,7 @@ class divingDataset(Dataset):
 		images = self.collect_files(dir)
 		flow = torch.FloatTensor(channel,num_frame,size,size)
 		if random==True:
+			print 'random'
 			seed = np.random.random_integers(0,len(images)-num_frame) #random sampling
 			for i in range(num_frame):
 				img = Image.open(images[i+seed])
@@ -84,6 +85,7 @@ class divingDataset(Dataset):
 				img = self.transform(img)
 				flow[:,i,:,:] = img
 		else: 
+			print 'no random'
 			downsampe = []
 			for i in range(0, len(images), int(len(images)/num_frame)):
 				downsampe.append(i)
