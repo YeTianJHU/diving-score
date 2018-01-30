@@ -153,7 +153,8 @@ def main(options):
 		logging.error("No such model: {0}".format(options.model))
 		
 	for param in model.parameters():
-			param.requires_grad = True
+		param.requires_grad = True
+
 
 	if options.only_last_layer:
 		for param in model.parameters():
