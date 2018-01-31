@@ -54,12 +54,13 @@ k_range = ['linear', 'poly', 'rbf', 'sigmoid', 'precomputed']
 
 for k in k_range:
 	for i in c_range:
-		   for j in e_range:
+		for j in e_range:
 
-				   clf = SVR(C=i, epsilon=j,kernel=k)
-				   clf.fit(x_train, y_train)
-				   y_predit = clf.predict(x_test)
+			clf = SVR(C=i, epsilon=j,kernel=k)
+			clf.fit(x_train, y_train)
+			y_predit = clf.predict(x_test)
 
-				   rho, p_val = spearmanr(y_test, y_predit)
-				   print k_range, i, j, rho
-	print ''
+			rho, p_val = spearmanr(y_test, y_predit)
+			#print k_range, i, j, rho
+			logging.info("k:{0}, C:{1}, e:{2}, rho:{3}".format(k, i, j, rho))
+

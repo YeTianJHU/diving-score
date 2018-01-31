@@ -122,7 +122,8 @@ for video in videos:
 		feature = test_output[1]
 		np_feature =  feature.data.cpu().numpy()[0]
 		score = test_output[0]
-		features.append([np_feature, score])
+		np_score = score.data.cpu().numpy()[0]
+		features.append([np_feature, np_score])
 
 	features = np.array(features)
 
