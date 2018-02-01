@@ -66,9 +66,9 @@ parser.add_argument("--use_trained_model", default=1, type=int,
 					help="whether use the pre-trained model on kinetics or not")
 parser.add_argument("--model", default="P3D",  choices=["P3D", "C3D","I3D"],
 					help="which machine to run the code. choice from ye_home and marcc")
-parser.add_argument("--random", default=False,  type=bool,
+parser.add_argument("--random", default=0,  type=int,
 					help="random sapmling in training")
-parser.add_argument("--test", default=False,  type=bool,
+parser.add_argument("--test", default=0,  type=int,
 					help="whether get into the whole test mode")
 
 def adjust_learning_rate(optimizer, epoch, lr_steps):
@@ -111,10 +111,12 @@ def main(options):
 	
 	dset_train = divingDataset(data_folder, train_file, label_file, transformations, random=options.random, size=options.size)
 
-	if options.test == True:
+	if options.test:
+		# print 'test in train'
 		dset_test = divingDataset(data_folder, test_file, label_file, transformations, test=True, size=options.size)
 		options.batch_size = 1
 	else:
+		# print 'no test in train'
 		dset_test = divingDataset(data_folder, test_file, label_file, transformations, random=options.random, test=False, size=options.size)
 
 	train_loader = DataLoader(dset_train,
@@ -202,7 +204,7 @@ def main(options):
 	if not options.test:
 		# main training loop
 		# last_dev_avg_loss = float("inf")
-		for epoch_i in range(start_epoch, options.epochs):
+		for epoch_i in range(0, options.epochs):
 			logging.info("At {0}-th epoch.".format(epoch_i))
 			
 			if len(options.lr_steps)>0 and options.use_policy and options.optimizer=="SGD":

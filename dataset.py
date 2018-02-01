@@ -24,7 +24,7 @@ import csv
 # import skvideo.io
 
 class divingDataset(Dataset):
-	def __init__(self, data_folder, data_file, label_file, transform, random=False, test=False, num_frame=16, channel=3, size=160):
+	def __init__(self, data_folder, data_file, label_file, transform, random=0, test=0, num_frame=16, channel=3, size=160):
 
 		self.data_folder = data_folder
 		self.transform = transform
@@ -45,11 +45,13 @@ class divingDataset(Dataset):
 		video_path = os.path.join(self.data_folder, video_name)
 
 		if self.test:
+			# print 'test in dataset'
 			video_tensor, num_tensor = self.get_test_tensor(video_path, self.num_frame, self.channel, self.size)
 			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
 
 			return video_tensor, num_tensor, labels
 		else:
+			# print 'no test in dataset'
 			video_tensor = self.get_video_tensor(video_path, self.num_frame, self.channel, self.size, self.random)
 
 			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
@@ -76,7 +78,8 @@ class divingDataset(Dataset):
 	def get_video_tensor(self, dir, num_frame, channel, size, random):
 		images = self.collect_files(dir)
 		flow = torch.FloatTensor(channel,num_frame,size,size)
-		if random==True:
+		if random:
+			# print 'random in get_vid_tensor'
 			seed = np.random.random_integers(0,len(images)-num_frame) #random sampling
 			for i in range(num_frame):
 				img = Image.open(images[i+seed])
@@ -84,6 +87,7 @@ class divingDataset(Dataset):
 				img = self.transform(img)
 				flow[:,i,:,:] = img
 		else: 
+			# print 'no random in get_vid_tensor'
 			downsampe = []
 			for i in range(0, len(images), int(len(images)/num_frame)):
 				downsampe.append(i)
