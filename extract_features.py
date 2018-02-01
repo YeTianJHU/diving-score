@@ -25,7 +25,6 @@ from torchvision.transforms import ToPILImage
 from p3d_model import P3D199, C3D, get_optim_policies
 from utils import transfer_model
 from dataset import divingDataset
-from scipy.stats import spearmanr
 
 
 
@@ -35,7 +34,7 @@ channel = 3
 size = 160
 model_input_length = 16
 model_type = 'P3D'
-use_cuda = True
+use_cuda = 0
 load = 2
 
 def collect_files(dir_name, file_ext=".jpg", sort_files=True):
@@ -114,6 +113,7 @@ for video in videos:
 		vid_tensor.unsqueeze_(0)
 
 		if use_cuda:
+			print ('use cuda')
 			vid_tensor = Variable(vid_tensor).cuda()
 		else:
 			vid_tensor = Variable(vid_tensor)
@@ -127,7 +127,7 @@ for video in videos:
 
 	features = np.array(features)
 
-	np.save(feature_vid_path, features)
+	# np.save(feature_vid_path, features)
 	n_vid += 1
 	print (video),('|'),(n_vid),('done')
 
