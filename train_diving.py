@@ -70,8 +70,8 @@ parser.add_argument("--random", default=0,  type=int,
 					help="random sapmling in training")
 parser.add_argument("--test", default=0,  type=int,
 					help="whether get into the whole test mode")
-parser.add_argument("--stop", default=0.8,  type=int,
-					help="whether to perform early stop")
+parser.add_argument("--stop", default=0.8, type=float,
+					help="Perform early stop")
 
 
 def adjust_learning_rate(optimizer, epoch, lr_steps):
