@@ -43,7 +43,7 @@ parser.add_argument("--save", default=0, type=int,
 parser.add_argument("--epochs", default=65, type=int,
 					help="Epochs through the data. (default=60)")  
 parser.add_argument("--learning_rate", "-lr", default=0.0001, type=float,
-					help="Learning rate of the optimization. (default=0.001)")              
+					help="Learning rate of the optimization. (default=0.0001)")              
 parser.add_argument("--batch_size", default=8, type=int,
 					help="Batch size for training. (default=16)")
 parser.add_argument("--optimizer", default="SGD", choices=["SGD", "Adadelta", "Adam"],
@@ -70,6 +70,9 @@ parser.add_argument("--random", default=0,  type=int,
 					help="random sapmling in training")
 parser.add_argument("--test", default=0,  type=int,
 					help="whether get into the whole test mode")
+parser.add_argument("--stop", default=0.8,  type=int,
+					help="whether to perform early stop")
+
 
 def adjust_learning_rate(optimizer, epoch, lr_steps):
 	"""Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
@@ -289,6 +292,10 @@ def main(options):
 
 			rho, p_val = spearmanr(all_test_output, all_labels)
 			logging.info("Average test loss value per instance is {0}, the corr is {1} at the end of epoch {2}".format(test_avg_loss, rho, epoch_i))
+			
+			if rho > options.stop:
+				break
+
 	#######################################################################################################################
 		# the last test for visualization
 		model.eval()
