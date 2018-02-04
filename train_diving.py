@@ -72,7 +72,8 @@ parser.add_argument("--test", default=0,  type=int,
 					help="whether get into the whole test mode")
 parser.add_argument("--stop", default=0.8, type=float,
 					help="Perform early stop")
-
+parser.add_argument("--tcn_range", default=0, type=int,
+					help="which part of tcn to use (0 is not using)")
 
 def adjust_learning_rate(optimizer, epoch, lr_steps):
 	"""Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
@@ -92,6 +93,7 @@ def main(options):
 	train_file = './training_idx.npy'
 	test_file = './testing_idx.npy'
 	data_folder = './frames'
+	range_file = './tcn_time_range.npy'
 	if options.task == "score":
 		label_file = './overall_scores.npy'
 	else:
@@ -112,15 +114,15 @@ def main(options):
 										transforms.ToTensor()
 										])	
 	
-	dset_train = divingDataset(data_folder, train_file, label_file, transformations, random=options.random, size=options.size)
+	dset_train = divingDataset(data_folder, train_file, label_file, range_file, transformations, tcn_range=options.tcn_range, random=options.random, size=options.size)
 
 	if options.test:
 		# print 'test in train'
-		dset_test = divingDataset(data_folder, test_file, label_file, transformations, test=True, size=options.size)
+		dset_test = divingDataset(data_folder, test_file, label_file, range_file, transformations, test=True, size=options.size)
 		options.batch_size = 1
 	else:
 		# print 'no test in train'
-		dset_test = divingDataset(data_folder, test_file, label_file, transformations, random=options.random, test=False, size=options.size)
+		dset_test = divingDataset(data_folder, test_file, label_file, range_file, transformations, tcn_range=options.tcn_range, random=options.random, test=False, size=options.size)
 
 	train_loader = DataLoader(dset_train,
 							  batch_size = options.batch_size,

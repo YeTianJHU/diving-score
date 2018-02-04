@@ -24,7 +24,7 @@ import csv
 # import skvideo.io
 
 class divingDataset(Dataset):
-	def __init__(self, data_folder, data_file, label_file, transform, random=0, test=0, num_frame=16, channel=3, size=160):
+	def __init__(self, data_folder, data_file, label_file, range_file, transform, tcn_range=0, random=0, test=0, num_frame=16, channel=3, size=160):
 
 		self.data_folder = data_folder
 		self.transform = transform
@@ -35,6 +35,8 @@ class divingDataset(Dataset):
 		self.label = np.load(label_file)
 		self.random = random
 		self.test = test
+		self.time_range = np.load(range_file)
+		self.tcn_range = tcn_range
 
 
 		
@@ -50,6 +52,21 @@ class divingDataset(Dataset):
 			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
 
 			return video_tensor, num_tensor, labels
+		elif self.tcn_range:
+			vid_range = self.time_range[index]
+			if len(vid_range) != 4:
+				vid_range = np.insert(vid_range, 0,0)
+			if self.tcn_range != 4:
+				mid = int((vid_range[self.tcn_range-1]+vid_range[self.tcn_range])/2)
+				start = int(mid-8)
+			else: 
+				start = int(vid_range[4])
+
+			video_tensor = self.get_range_tensor(video_path, self.num_frame, self.channel, self.size, start)
+
+			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
+
+			return video_tensor, labels
 		else:
 			# print 'no test in dataset'
 			video_tensor = self.get_video_tensor(video_path, self.num_frame, self.channel, self.size, self.random)
@@ -124,3 +141,21 @@ class divingDataset(Dataset):
 			all_flow.append(vid_tensor)
 
 		return all_flow, len(downsampe)-2
+
+	def get_range_tensor(self, dir, num_frame, channel, size, start):
+		images = self.collect_files(dir)
+
+		if start < 0:
+			start = 0
+		if start + 15 > len(images):
+			start = int(len(images) - 16)
+
+		flow = torch.FloatTensor(channel,num_frame,size,size)
+
+		for i in range(num_frame):
+			img = Image.open(images[i+start])
+			img = img.convert('RGB')
+			img = self.transform(img)
+			flow[:,i,:,:] = img
+
+		return flow
