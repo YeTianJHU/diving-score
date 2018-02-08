@@ -169,7 +169,6 @@ class divingDataset(Dataset):
 			start = int(len(images) - num_frame_range - 1) 
 		if start < 0:
 			start = 0
-		print start
 
 		flow = torch.FloatTensor(channel,num_frame,size,size)
 
