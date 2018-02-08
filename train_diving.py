@@ -93,7 +93,7 @@ def main(options):
 	train_file = './training_idx.npy'
 	test_file = './testing_idx.npy'
 	data_folder = './frames'
-	range_file = './tcn_time_range.npy'
+	range_file = './tcn_time_point.npy'
 	if options.task == "score":
 		label_file = './overall_scores.npy'
 	else:
