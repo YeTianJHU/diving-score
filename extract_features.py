@@ -123,7 +123,7 @@ for idx, video in enumerate(videos):
 		mid = int((vid_range[tcn_range-1]+vid_range[tcn_range])/2)
 		start = int(mid-8)
 	else: 
-		start = int(vid_range[4])
+		start = int(vid_range[3])
 
 	vid_tensor = get_range_tensor(dir=video_path, num_frame=16, channel=3, size=160, start=start, transformations=transformations)
 

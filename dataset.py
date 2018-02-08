@@ -60,7 +60,7 @@ class divingDataset(Dataset):
 				mid = int((vid_range[self.tcn_range-1]+vid_range[self.tcn_range])/2)
 				start = int(mid-8)
 			else: 
-				start = int(vid_range[4])
+				start = int(vid_range[3])
 
 			video_tensor = self.get_range_tensor(video_path, self.num_frame, self.channel, self.size, start)
 
@@ -147,8 +147,8 @@ class divingDataset(Dataset):
 
 		if start < 0:
 			start = 0
-		if start + 15 > len(images):
-			start = int(len(images) - 16)
+		if start + 17 > len(images):
+			start = int(len(images) - 17) 
 
 		flow = torch.FloatTensor(channel,num_frame,size,size)
 
