@@ -162,13 +162,17 @@ class divingDataset(Dataset):
 	def get_range_tensor(self, dir, downsample, num_frame, channel, size, start):
 		images = self.collect_files(dir)
 
+		seed = np.random.random_integers(-2,2) #random sampling
+
 		num_frame_range = downsample * num_frame
+		start += seed
 		if start < 0:
 			start = 0
 		if start + num_frame_range +1 > len(images):
 			start = int(len(images) - num_frame_range - 1) 
 		if start < 0:
 			start = 0
+
 
 		flow = torch.FloatTensor(channel,num_frame,size,size)
 
