@@ -133,6 +133,60 @@ def ED_TCN(n_nodes, pool_sizes, conv_lens, n_classes, n_feat, max_len,
 
 	return model
 
+
+
+def bi_lstm():
+
+	model = Sequential()
+	model.add(LSTM(20, input_shape=(160, 2048), return_sequences=True))
+	model.add(TimeDistributed(Dense(5, activation='sigmoid')))
+	model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['categorical_accuracy'])
+	return model
+
+
+def TCN_LSTM(n_nodes, pool_sizes, conv_lens, n_classes, n_feat, max_len, 
+			loss='categorical_crossentropy', causal=False, 
+			optimizer="rmsprop", activation='norm_relu',
+			compile_model=True):
+	n_layers = len(n_nodes)
+
+	inputs = Input(shape=(max_len,n_feat))
+	model = inputs
+	# ---- Encoder ----
+	for i in range(n_layers):
+		# Pad beginning of sequence to prevent usage of future data
+		if causal: model = ZeroPadding1D((conv_lens[i]//2,0))(model)
+		model = Convolution1D(n_nodes[i], conv_lens[i], border_mode='same')(model) + model
+		if causal: model = Cropping1D((0,conv_lens[i]//2))(model)
+
+		model = SpatialDropout1D(0.3)(model)
+		print (model.shape)
+		
+		if activation=='norm_relu': 
+			model = Activation('relu')(model)            
+			model = Lambda(channel_normalization, name="encoder_norm_{}".format(i))(model)
+		elif activation=='wavenet': 
+			model = WaveNet_activation(model) 
+		else:
+			model = Activation(activation)(model)            
+		
+		model = MaxPooling1D(pool_sizes[i])(model)
+
+	for i in range(n_layers):
+		model = UpSampling1D(pool_sizes[-i-1])(model)
+		if causal: model = ZeroPadding1D((conv_lens[-i-1]//2,0))(model)
+		model = LSTM(20, return_sequences=True)(model)
+
+		# Output FC layer
+	model = TimeDistributed(Dense(n_classes, activation="softmax" ))(model)
+	
+	model = Model(input=inputs, output=model)
+
+	if compile_model:
+		model.compile(loss=loss, optimizer=optimizer, sample_weight_mode="temporal", metrics=['categorical_accuracy'])
+
+	return model
+
 #####################################################################
 def train_model(model, max_len, get_cross_validation=False):
 	"""For the 0/1 segemation task, load data, compile, fit, evaluate model, and predict frame labels.
@@ -177,9 +231,12 @@ def train_model(model, max_len, get_cross_validation=False):
 		pool_sizes = [2, 2]# 2]
 		conv_lens = [3, 5]# 10]
 		causal = False
-		model = ED_TCN(n_nodes, pool_sizes, conv_lens, 5, 2048, max_len, 
-			causal=causal, activation='norm_relu', optimizer='rmsprop')
+		# model = ED_TCN(n_nodes, pool_sizes, conv_lens, 5, 2048, max_len, 
+		# 	causal=causal, activation='norm_relu', optimizer='rmsprop')
 		# model.summary()
+		# model = bi_lstm()
+		model = TCN_LSTM(n_nodes, pool_sizes, conv_lens, 5, 2048, max_len, 
+			causal=causal, activation='norm_relu', optimizer='rmsprop')
 
 	# loss = np.zeros((4))
 	# acc = np.zeros((4))

@@ -24,7 +24,7 @@ import csv
 # import skvideo.io
 
 class divingDataset(Dataset):
-	def __init__(self, data_folder, data_file, label_file, range_file, transform, tcn_range=0, random=0, test=0, num_frame=16, channel=3, size=160):
+	def __init__(self, data_folder, data_file, label_file, range_file, transform, tcn_range=0, random=0, test=0, num_frame=16, channel=3, size=160, downsample=2):
 
 		self.data_folder = data_folder
 		self.transform = transform
@@ -37,7 +37,7 @@ class divingDataset(Dataset):
 		self.test = test
 		self.time_range = np.load(range_file)
 		self.tcn_range = tcn_range
-
+		self.downsample = downsample
 
 		
 	def __getitem__(self, index):
@@ -58,11 +58,11 @@ class divingDataset(Dataset):
 				vid_range = np.insert(vid_range, 0,0)
 			if self.tcn_range != 4:
 				mid = int((vid_range[self.tcn_range-1]+vid_range[self.tcn_range])/2)
-				start = int(mid-8)
+				start = int(mid-8*self.downsample)
 			else: 
 				start = int(vid_range[3])
 
-			video_tensor = self.get_range_tensor(video_path, self.num_frame, self.channel, self.size, start)
+			video_tensor = self.get_range_tensor(video_path, self.downsample, self.num_frame, self.channel, self.size, start)
 
 			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
 
@@ -142,18 +142,39 @@ class divingDataset(Dataset):
 
 		return all_flow, len(downsampe)-2
 
-	def get_range_tensor(self, dir, num_frame, channel, size, start):
+	# def get_range_tensor(self, dir, num_frame, channel, size, start):
+	# 	images = self.collect_files(dir)
+
+	# 	if start < 0:
+	# 		start = 0
+	# 	if start + 17 > len(images):
+	# 		start = int(len(images) - 17) 
+
+	# 	flow = torch.FloatTensor(channel,num_frame,size,size)
+
+	# 	for i in range(num_frame):
+	# 		img = Image.open(images[i+start])
+	# 		img = img.convert('RGB')
+	# 		img = self.transform(img)
+	# 		flow[:,i,:,:] = img
+
+	# 	return flow
+	def get_range_tensor(self, dir, downsample, num_frame, channel, size, start):
 		images = self.collect_files(dir)
 
+		num_frame_range = downsample * num_frame
 		if start < 0:
 			start = 0
-		if start + 17 > len(images):
-			start = int(len(images) - 17) 
+		if start + num_frame_range +1 > len(images):
+			start = int(len(images) - num_frame_range - 1) 
+		if start < 0:
+			start = 0
+		print start
 
 		flow = torch.FloatTensor(channel,num_frame,size,size)
 
 		for i in range(num_frame):
-			img = Image.open(images[i+start])
+			img = Image.open(images[int(i*downsample)+start])
 			img = img.convert('RGB')
 			img = self.transform(img)
 			flow[:,i,:,:] = img
