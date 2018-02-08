@@ -92,6 +92,7 @@ def ED_TCN(n_nodes, pool_sizes, conv_lens, n_classes, n_feat, max_len,
 		if causal: model = Cropping1D((0,conv_lens[i]//2))(model)
 
 		model = SpatialDropout1D(0.3)(model)
+		print (model.shape)
 		
 		if activation=='norm_relu': 
 			model = Activation('relu')(model)            
@@ -172,9 +173,9 @@ def train_model(model, max_len, get_cross_validation=False):
 	# np.set_printoptions(threshold='nan')
 
 	if model == ED_TCN:
-		n_nodes = [512, 512]  #, 1024]
-		pool_sizes = [2, 2]  #, 2]
-		conv_lens = [10, 10]  #, 10]
+		n_nodes = [512, 512]# 1024]
+		pool_sizes = [2, 2]# 2]
+		conv_lens = [3, 5]# 10]
 		causal = False
 		model = ED_TCN(n_nodes, pool_sizes, conv_lens, 5, 2048, max_len, 
 			causal=causal, activation='norm_relu', optimizer='rmsprop')
@@ -192,7 +193,7 @@ def train_model(model, max_len, get_cross_validation=False):
 
 		x_train, x_test, y_train, y_test = cross_validation.train_test_split(x,y_cat,test_size=0.2, random_state=1)
 		print (x_train.shape)
-		model.fit(x_train,y_train, validation_data=[x_test,y_test],epochs=50)
+		model.fit(x_train,y_train, validation_data=[x_test,y_test],epochs=30)
 		# loss_and_metrics = model.evaluate(x_test,y_test)
 
 		# # loss_mean = loss_and_metrics[0]

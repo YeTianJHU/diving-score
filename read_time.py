@@ -59,9 +59,9 @@ for idx, video in enumerate(vec_data):
 	for i in range(len(video)-1):
 		if video[i] != video[i+1]:
 			note.append(i)
-	if len(note) != 4:
-		print (idx+1, note)
+	print (idx+1, note)
 	note_all.append(note)
 print (len(note_all))
+np.save('tcn_time_point.npy', note_all)
 
 
