@@ -76,7 +76,8 @@ parser.add_argument("--tcn_range", default=0, type=int,
 					help="which part of tcn to use (0 is not using)")
 parser.add_argument("--downsample", default=1,  type=int,
 					help="downsample rate for stages")
-
+parser.add_argument("--region", default=0,  type=int,
+					help="downsample rate for stages")
 
 def adjust_learning_rate(optimizer, epoch, lr_steps):
 	"""Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
@@ -117,7 +118,7 @@ def main(options):
 										transforms.ToTensor()
 										])	
 	
-	dset_train = divingDataset(data_folder, train_file, label_file, range_file, transformations, tcn_range=options.tcn_range, random=options.random, size=options.size, downsample=options.downsample)
+	dset_train = divingDataset(data_folder, train_file, label_file, range_file, transformations, tcn_range=options.tcn_range, random=options.random, size=options.size, downsample=options.downsample, region=options.region)
 
 	if options.test:
 		# print 'test in train'
@@ -125,7 +126,7 @@ def main(options):
 		options.batch_size = 1
 	else:
 		# print 'no test in train'
-		dset_test = divingDataset(data_folder, test_file, label_file, range_file, transformations, tcn_range=options.tcn_range, random=options.random, test=False, size=options.size, downsample=options.downsample)
+		dset_test = divingDataset(data_folder, test_file, label_file, range_file, transformations, tcn_range=options.tcn_range, random=options.random, test=False, size=options.size, downsample=options.downsample,region=options.region)
 
 	train_loader = DataLoader(dset_train,
 							  batch_size = options.batch_size,

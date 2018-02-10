@@ -24,7 +24,7 @@ import csv
 # import skvideo.io
 
 class divingDataset(Dataset):
-	def __init__(self, data_folder, data_file, label_file, range_file, transform, tcn_range=0, random=0, test=0, num_frame=16, channel=3, size=160, downsample=2):
+	def __init__(self, data_folder, data_file, label_file, range_file, transform, tcn_range=0, random=0, test=0, num_frame=16, channel=3, size=160, downsample=2, region=0):
 
 		self.data_folder = data_folder
 		self.transform = transform
@@ -38,12 +38,15 @@ class divingDataset(Dataset):
 		self.time_range = np.load(range_file)
 		self.tcn_range = tcn_range
 		self.downsample = downsample
+		self.region = region
 
 		
 	def __getitem__(self, index):
 
 		video_name = str(self.video_name[index][0]).zfill(3) 
-		# print video_name
+
+		v_id = self.video_name[index][0]-1
+
 		video_path = os.path.join(self.data_folder, video_name)
 
 		if self.test:
@@ -53,7 +56,7 @@ class divingDataset(Dataset):
 
 			return video_tensor, num_tensor, labels
 		elif self.tcn_range:
-			vid_range = self.time_range[index]
+			vid_range = self.time_range[v_id]
 			if len(vid_range) != 4:
 				vid_range = np.insert(vid_range, 0,0)
 			if self.tcn_range != 4:
@@ -64,6 +67,19 @@ class divingDataset(Dataset):
 
 			video_tensor = self.get_range_tensor(video_path, self.downsample, self.num_frame, self.channel, self.size, start)
 
+			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
+
+			return video_tensor, labels
+		elif self.region:
+			vid_range = self.time_range[v_id]
+			if self.region == 1:
+				start = 0
+				end = vid_range[-1]-1
+			elif self.region == 2:
+				start = vid_range[1]
+				end = vid_range[-1]-1
+		#	print start, end, vid_range
+			video_tensor = self.get_region_tensor(video_path, start, end, self.num_frame, self.channel, self.size)
 			labels = self.label[0][self.video_name[index][0]-1].astype(np.float32)
 
 			return video_tensor, labels
@@ -182,4 +198,26 @@ class divingDataset(Dataset):
 			img = self.transform(img)
 			flow[:,i,:,:] = img
 
+		return flow
+
+	def get_region_tensor(self, dir, start, end, num_frame, channel, size):
+		images = self.collect_files(dir)
+		flow = torch.FloatTensor(channel,num_frame,size,size)
+		downsampe = []
+		start = int(start)
+		end = int(end)
+		if int(end-start)<=num_frame:
+			for i in range(start, int(start+num_frame-1), 1):
+				downsampe.append(i)
+		else:
+			for i in range(start, end, int((end-start)/num_frame)):
+				downsampe.append(i)
+				
+		downsampe = downsampe[len(downsampe)-num_frame:]
+
+		for idx, i in enumerate(downsampe):
+			img = Image.open(images[i])
+			img = img.convert('RGB')
+			img = self.transform(img)
+			flow[:,idx,:,:] = img
 		return flow
