@@ -1,14 +1,4 @@
-# scoring-diving# diving
-
-
-### Table of Contents
-0. [Introduction](#introduction)
-0. [Requirements](#Requirements)
-0. [Usage](#Usage)
-0. [Data](#Data) 
-0. [Models](#Models)
-0. [Acknowledgement](#Acknowledgement)
-0. [Contact](#contact)
+# Stacking Segment-level P3D for Action Quality Assessment
 
 ### Introduction
 This repository contains the implementation, models and data (lebel file) for "S3D: Stacking Segment-level P3D for Action Quality Assessment" (https://www.researchgate.net/publication/323074943_S3D_Fusing_Segment-level_P3D_for_Action_Quality_Assessment).
