@@ -4,9 +4,9 @@
 ### Table of Contents
 0. [Introduction](#introduction)
 0. [Requirements](#Requirements)
-0. [Example Code](#Example Code)
+0. [Usage](#Usage)
 0. [Data](#Data) 
-0. [Pretrained models](#Pretrained models)
+0. [Models](#Models)
 0. [Acknowledgement](#Acknowledgement)
 0. [Contact](#contact)
 
@@ -22,7 +22,7 @@ This repository contains the implementation, models and data (lebel file) for "S
 - skvideo 
 - opencv 
 
-### Example Code
+### Usage
 train ED-TCN on ResNet features
 	python seg_train.py 
 train P3D-spaced
@@ -33,16 +33,16 @@ train P3D-center on stage 3
 ### Data
 The diving videos are from [UNLV-Dive dataset](http://rtis.oit.unlv.edu/datasets.html). We annotated segmentation labels for this dataset at - './data_files/jump_drop_water_label.txt'
 
-### Pretrained models
+### Models
 Models with weights can be downloaded from [google drive](https://drive.google.com/drive/folders/1zC-fghZIKDN5wr4jDLAO_OYAT7Y9ShUo). 
 - checkpoint90.tar is trained on stage 1 (jumping)
 - checkpoint91.tar is trained on stage 2 (dropping)
 - checkpoint79.tar is trained on stage 3 (entering into water)
 - checkpoint92.tar is trained on stage 4 (ending)
     
-## Acknowledgement
-0. The P3D model (with weights pre-trained on kinetics) we used is revised from [P3D-Pytorch](https://github.com/qijiezhao/pseudo-3d-pytorch) by qijiezhao.
-0. The ED-TCN model is revised from [ED-TCN](https://github.com/colincsl/TemporalConvolutionalNetworks) by colincsl.
+### Acknowledgement
+- The P3D model (with weights pre-trained on kinetics) is revised from [P3D-Pytorch](https://github.com/qijiezhao/pseudo-3d-pytorch) by qijiezhao.
+- The ED-TCN model is revised from [ED-TCN](https://github.com/colincsl/TemporalConvolutionalNetworks) by colincsl.
 
-## Contact
+### Contact
 If there are any questions, please contact me at tytian@outlook.com.
