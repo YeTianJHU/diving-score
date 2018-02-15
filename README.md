@@ -23,19 +23,22 @@ This repository contains the implementation, models and data (lebel file) for "S
 - opencv 
 
 ### Usage
-train ED-TCN on ResNet features
+* The command to train ED-TCN on ResNet features
 ```
 	python seg_train.py 
 ```
-train P3D-spaced
+* The command to train P3D-spaced
 ```
 	python train_diving.py --gpuid=0 --stop=0.79
 ```
-train P3D-center on stage 3
+* The command to train P3D-center on stage 3
 ```
 	python train_diving.py --tcn_range=3 --downsample=2 --gpuid=0 --stop=0.80
 ```
-
+* The command to get correlation using SvR/LR (using the extracted P3D features from `./data_files/all_train_v2.npy` and `./data_files/all_test_v2.npy`)
+```
+	python svr.py
+```
 ### Data
 The diving videos are from [UNLV-Dive dataset](http://rtis.oit.unlv.edu/datasets.html). We annotated segmentation labels for this dataset at `./data_files/jump_drop_water_label.txt`
 
