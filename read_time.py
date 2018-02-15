@@ -49,9 +49,9 @@ def to_vector(mat):
 # for i in data:
 # 	vec_data.append(to_vector(i))
 
-# np.save('tcn_time_range.npy', vec_data)
+# np.save('./data_files/tcn_time_range.npy', vec_data)
 
-vec_data = np.load('tcn_time_range.npy')
+vec_data = np.load('./data_files/tcn_time_range.npy')
 
 note_all = []
 for idx, video in enumerate(vec_data):
@@ -62,6 +62,6 @@ for idx, video in enumerate(vec_data):
 	print (idx+1, note)
 	note_all.append(note)
 print (len(note_all))
-np.save('tcn_time_point.npy', note_all)
+np.save('./data_files/tcn_time_point.npy', note_all)
 
 

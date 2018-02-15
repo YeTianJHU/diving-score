@@ -14,5 +14,5 @@ print(mat['overall_scores'].shape)
 
 mat_t = np.transpose(mat['overall_scores'])
 
-np.save('overall_scores.npy', mat_t)
+np.save('./data_files/overall_scores.npy', mat_t)
 

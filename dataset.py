@@ -158,23 +158,6 @@ class divingDataset(Dataset):
 
 		return all_flow, len(downsampe)-2
 
-	# def get_range_tensor(self, dir, num_frame, channel, size, start):
-	# 	images = self.collect_files(dir)
-
-	# 	if start < 0:
-	# 		start = 0
-	# 	if start + 17 > len(images):
-	# 		start = int(len(images) - 17) 
-
-	# 	flow = torch.FloatTensor(channel,num_frame,size,size)
-
-	# 	for i in range(num_frame):
-	# 		img = Image.open(images[i+start])
-	# 		img = img.convert('RGB')
-	# 		img = self.transform(img)
-	# 		flow[:,i,:,:] = img
-
-	# 	return flow
 	def get_range_tensor(self, dir, downsample, num_frame, channel, size, start):
 		images = self.collect_files(dir)
 

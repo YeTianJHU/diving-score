@@ -292,165 +292,12 @@ def P3D199(pretrained=False,modality='RGB',**kwargs):
 	model = P3D(Bottleneck, [3, 8, 36, 3], modality=modality,**kwargs)
 	if pretrained==True:
 		if modality=='RGB':
-			pretrained_file='p3d_rgb_199.checkpoint.pth.tar'
+			pretrained_file='./models/p3d_rgb_199.checkpoint.pth.tar'
 		elif modality=='Flow':
-			pretrained_file='p3d_flow_199.checkpoint.pth.tar'
+			pretrained_file='./models/p3d_flow_199.checkpoint.pth.tar'
 		weights=torch.load(pretrained_file)['state_dict']
 		model.load_state_dict(weights)
 	return model
-
-
-class C3D(nn.Module):
-    """
-    The C3D network
-    """
-
-    def __init__(self):
-        super(C3D, self).__init__()
-
-        self.conv1 = nn.Conv3d(3, 64, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool1 = nn.MaxPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2))
-
-        self.conv2 = nn.Conv3d(64, 128, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool2 = nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
-
-        self.conv3a = nn.Conv3d(128, 256, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv3b = nn.Conv3d(256, 256, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool3 = nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
-
-        self.conv4a = nn.Conv3d(256, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv4b = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool4 = nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
-
-        self.conv5a = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv5b = nn.Conv3d(512, 512, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.pool5 = nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2), padding=(0, 1, 1))
-
-
-        self.fc6 = nn.Linear(8192, 4096)
-        self.fc7 = nn.Linear(4096, 4096)
-        self.fc8 = nn.Linear(4096, 487)
-
-        self.dropout = nn.Dropout(p=0.5)
-
-        self.relu = nn.ReLU()
-        self.softmax = nn.Softmax()
-
-    def forward(self, x):
-
-        h = self.relu(self.conv1(x))
-        h = self.pool1(h)
-
-        h = self.relu(self.conv2(h))
-        h = self.pool2(h)
-
-        h = self.relu(self.conv3a(h))
-        h = self.relu(self.conv3b(h))
-        h = self.pool3(h)
-
-        h = self.relu(self.conv4a(h))
-        h = self.relu(self.conv4b(h))
-        h = self.pool4(h)
-
-        h = self.relu(self.conv5a(h))
-        h = self.relu(self.conv5b(h))
-        h = self.pool5(h)
-
-
-        h = h.view(-1, 8192)
-        h = self.relu(self.fc6(h))
-        h = self.dropout(h)
-        h = self.relu(self.fc7(h))
-        h = self.dropout(h)
-
-        logits = self.fc8(h)
-        probs = self.softmax(logits)
-
-        return probs
-
-# custom operation
-def get_optim_policies(model=None,modality='RGB',enable_pbn=True):
-	'''
-	first conv:         weight --> conv weight
-						bias   --> conv bias
-	normal action:      weight --> non-first conv + fc weight
-						bias   --> non-first conv + fc bias
-	bn:                 the first bn2, and many all bn3.
-
-	'''
-	first_conv_weight = []
-	first_conv_bias = []
-	normal_weight = []
-	normal_bias = []
-	bn = []
-
-	if model==None:
-		log.l.info('no model!')
-		exit()
-
-	conv_cnt = 0
-	bn_cnt = 0
-	for m in model.modules():
-		if isinstance(m, torch.nn.Conv3d) or isinstance(m, torch.nn.Conv2d):
-			ps = list(m.parameters())
-			conv_cnt += 1
-			if conv_cnt == 1:
-				first_conv_weight.append(ps[0])
-				if len(ps) == 2:
-					first_conv_bias.append(ps[1])
-			else:
-				normal_weight.append(ps[0])
-				if len(ps) == 2:
-					normal_bias.append(ps[1])
-		elif isinstance(m, torch.nn.Linear):
-			ps = list(m.parameters())
-			normal_weight.append(ps[0])
-			if len(ps) == 2:
-				normal_bias.append(ps[1])
-			  
-		elif isinstance(m, torch.nn.BatchNorm3d):
-			bn_cnt += 1
-			# later BN's are frozen
-			if not enable_pbn or bn_cnt == 1:
-				bn.extend(list(m.parameters()))
-		elif isinstance(m,torch.nn.BatchNorm2d):
-			bn.extend(list(m.parameters()))
-		elif len(m._modules) == 0:
-			if len(list(m.parameters())) > 0:
-				raise ValueError("New atomic module type: {}. Need to give it a learning policy".format(type(m)))
-
-	slow_rate=0.7
-	n_fore=int(len(normal_weight)*slow_rate)
-	slow_feat=normal_weight[:n_fore] # finetune slowly.
-	slow_bias=normal_bias[:n_fore] 
-	normal_feat=normal_weight[n_fore:]
-	normal_bias=normal_bias[n_fore:]
-
-	return [
-		{'params': first_conv_weight, 'lr_mult': 5 if modality == 'Flow' else 1, 'decay_mult': 1,
-		 'name': "first_conv_weight"},
-		{'params': first_conv_bias, 'lr_mult': 10 if modality == 'Flow' else 2, 'decay_mult': 0,
-		 'name': "first_conv_bias"},
-		{'params': slow_feat, 'lr_mult': 1, 'decay_mult': 1,
-		 'name': "slow_feat"},
-		{'params': slow_bias, 'lr_mult': 2, 'decay_mult': 0,
-		 'name': "slow_bias"},
-		{'params': normal_feat, 'lr_mult': 1 , 'decay_mult': 1,
-		 'name': "normal_feat"},
-		{'params': normal_bias, 'lr_mult': 2, 'decay_mult':0,
-		 'name': "normal_bias"},
-		{'params': bn, 'lr_mult': 1, 'decay_mult': 0,
-		 'name': "BN scale/shift"},
-	]
-
-# class add_softmax(nn.Module):
-#     def __init__(self, input):
-#         super(add_softmax, self).__init__()
-#         self.logsoftmax = nn.Softmax()
-#     def forward(self, input):
-#     	output = self.logsoftmax(input)
-#     	return output
-
 
 if __name__ == '__main__':
 
@@ -459,7 +306,6 @@ if __name__ == '__main__':
 	data=torch.autograd.Variable(torch.rand(10,3,16,160,160))   # if modality=='Flow', please change the 2nd dimension 3==>2
 	out=model(data)
 	print (model)
-	print ('vis here!')
 	vis = make_dot(out)
 	vis.view()
 	print (out.size(),out)

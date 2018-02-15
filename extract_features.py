@@ -30,7 +30,7 @@ from dataset import divingDataset
 
 data_file = './frames'
 feature_folder = './tcn_p3d_features'
-range_file = './tcn_time_point.npy'
+range_file = './data_files/tcn_time_point.npy'
 channel = 3
 size = 160
 model_input_length = 16
@@ -94,7 +94,7 @@ if use_cuda > 0:
 	model.cuda()
 
 logging.info("=> loading checkpoint"+str(load)+".tar")
-checkpoint = torch.load('checkpoint'+str(load)+'.tar')
+checkpoint = torch.load('./models/checkpoint'+str(load)+'.tar')
 start_epoch = checkpoint['epoch']
 model.load_state_dict(checkpoint['state_dict'])
 model.eval()

@@ -12,82 +12,56 @@ warnings.filterwarnings("ignore")
 
 
 feature_path = './p3d_features'
-train_file = './training_idx.npy'
-test_file = './testing_idx.npy'
-# label_file = './difficulty_level.npy'
-label_file = './overall_scores.npy'
-uni_len = 9
+train_file = './data_files/training_idx.npy'
+test_file = './data_files/testing_idx.npy'
+# label_file = './data_files/difficulty_level.npy'
+label_file = './data_files/overall_scores.npy'
+train_file = './data_files/all_train_v2.npy'
+test_file = './data_files/all_test_v2.npy'
 
 
-training_idx = np.load(train_file)
-testing_idx = np.load(test_file)
-label = np.load(label_file)[0]
+def to_array(l):
+	output = np.zeros_like(len(l))
+	for i in l:
+		print i
+		output = np.append(output, i)
+	return output[1:]
 
-def extend(score, uni_len):
-	if len(score) > uni_len:
-		score = score[len(score)-uni_len:]
-	elif len(score) < uni_len:
-		score = np.insert(score, 0, np.full((uni_len-len(score)), score[0]))
-	return score
 
-# x_train = []
-# y_train = []
-# for i in training_idx:
-# 	i = int(i)
-# 	feature_file = join(feature_path,"{:03d}.npy".format(i))
-# 	feature = np.load(feature_file)
-# 	score = feature[:, 1]
-# 	score = extend(score, uni_len)
-# 	# print score.shape
-# 	x_train.append(score)
-# 	y_train.append(label[i-1])
-# 	# print (score, label[i-1])
-# print len(x_train), len(y_train)
-# print x_train[0].shape, y_train[0].shape
+train_data = np.array(np.load(train_file))
+test_data = np.array(np.load(test_file))
 
-# x_test = []
-# y_test = []
-# for i in testing_idx:
-# 	i = int(i)
-# 	feature_file = join(feature_path,"{:03d}.npy".format(i))
-# 	feature = np.load(feature_file)
-# 	score = feature[:, 1]
-# 	score = extend(score, uni_len)
-# 	x_test.append(score)
-# 	y_test.append(label[i-1])
-# print len(x_test), len(y_test)
-# print x_test[0].shape, y_test[0].shape
+x_train = np.array(train_data[0])
+x_test = np.array(test_data[0])
 
-x_train = []
-y_train = []
-for i in training_idx:
-	i = int(i)
-	feature_file = join(feature_path,"{:03d}.npy".format(i))
-	feature = np.load(feature_file)
-	score = feature[:, 0]
-	score = np.mean(score, axis=0)
-	# score = score/np.linalg.norm(score)
-	# print score.shape
-	x_train.append(score)
-	y_train.append(label[i-1])
-	# print (score, label[i-1])
+y_train = np.array(train_data[2])
+y_test = np.array(test_data[2])
+
+
+for idx, i in enumerate(x_train):
+	for idy, j in enumerate(i):
+		x_train[idx][idy] = round(float(j),1)
+
+x_train = np.array(list(x_train), dtype=np.float)
+y_train = np.array(y_train, dtype=np.float)
+
+for idx, i in enumerate(x_test):
+	for idy, j in enumerate(i):
+		x_test[idx][idy] = round(float(j),1)
+
+x_test = np.array(list(x_test), dtype=np.float)
+y_test = np.array(y_test, dtype=np.float)
+
+# for i in range(len(x_train)):
+# 	print x_train[i], y_train[i]
 print len(x_train), len(y_train)
-print x_train[0].shape, y_train[0].shape
 
-x_test = []
-y_test = []
-for i in testing_idx:
-	i = int(i)
-	feature_file = join(feature_path,"{:03d}.npy".format(i))
-	feature = np.load(feature_file)
-	score = feature[:, 0]
-	score = np.mean(score, axis=0)
-	# score = score/np.linalg.norm(score)
-	x_test.append(score)
-	y_test.append(label[i-1])
-print len(x_test), len(y_test)
-print x_test[0].shape, y_test[0].shape
+clf = LinearRegression()
+clf.fit(x_train, y_train)
+y_predit = clf.predict(x_test)
 
+rho, p_val = spearmanr(y_test, y_predit)
+print rho
 
 clf = SVR(C=221, epsilon=0.01)
 clf.fit(x_train, y_train)
@@ -106,30 +80,21 @@ print (rho)
 # for i in range(len(y_test)):
 # 	print (y_test[i],'-',y_predit[i])
 
-# c_range = [0.01, 0.1, 1, 10 ,100]
-# e_range = [0.01, 0.1, 1, 10]
-# k_range = ['rbf'] #'linear', 'poly', 
+c_range = [60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260]
+e_range = [7, 8,9,10,11,12,13,14]
+k_range = ['rbf', 'linear']# 'poly', 
 
-# for k in k_range:
-# 	for i in c_range:
-# 		for j in e_range:
+for k in k_range:
+	for i in c_range:
+		for j in e_range:
 
-# 			clf = SVR(C=i, epsilon=j,kernel=k)
-# 			clf.fit(x_train, y_train)
-# 			y_predit = clf.predict(x_test)
+			clf = SVR(C=i, epsilon=j,kernel=k)
+			clf.fit(x_train, y_train)
+			y_predit = clf.predict(x_test)
 
-# 			rho, p_val = spearmanr(y_test, y_predit)
-# 			#print k_range, i, j, rho
-# 			logging.info("k:{0}, C:{1}, e:{2}, rho:{3}".format(k, i, j, rho))
-# 			print (k, i, j, rho)
+			rho, p_val = spearmanr(y_test, y_predit)
+			print k, i, j, round(rho, 3)
+			# logging.info("k:{0}, C:{1}, e:{2}, rho:{3}".format(k, i, j, rho))
+			# print (k, i, j, rho)
 
 
-clf = LinearRegression()
-clf.fit(x_train, y_train)
-y_predit = clf.predict(x_test)
-
-rho, p_val = spearmanr(y_test, y_predit)
-#print k_range, i, j, rho
-# logging.info("k:{0}, C:{1}, e:{2}, rho:{3}".format(k, i, j, rho))
-print (rho)
-# logging.info("{0}".format(rho))

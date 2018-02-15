@@ -23,7 +23,7 @@ from PIL import Image
 # import cv2
 from torchvision.transforms import ToPILImage
 from torch.optim.lr_scheduler import StepLR
-from p3d_model import P3D199, C3D, get_optim_policies
+from p3d_model import P3D199
 # from i3dpt import Unit3Dpy, I3D
 from utils import transfer_model
 from dataset import divingDataset
@@ -41,12 +41,12 @@ parser.add_argument("--load", default=0, type=int,
 parser.add_argument("--save", default=0, type=int,
 					help="Save network weights. 0 represent don't save; number represent model number")  
 parser.add_argument("--epochs", default=65, type=int,
-					help="Epochs through the data. (default=60)")  
+					help="Epochs through the data. (default=65)")  
 parser.add_argument("--learning_rate", "-lr", default=0.0001, type=float,
 					help="Learning rate of the optimization. (default=0.0001)")              
 parser.add_argument("--batch_size", default=8, type=int,
 					help="Batch size for training. (default=16)")
-parser.add_argument("--optimizer", default="SGD", choices=["SGD", "Adadelta", "Adam"],
+parser.add_argument("--optimizer", default="Adam", choices=["SGD", "Adadelta", "Adam"],
 					help="Optimizer of choice for training. (default=Adam)")
 parser.add_argument("--gpuid", default=[], nargs='+', type=str,
 					help="ID of gpu device to use. Empty implies cpu usage.")
@@ -60,16 +60,12 @@ parser.add_argument("--normalize", default=1, type=int,
 					help="do the normalize for the images")
 parser.add_argument("--lr_steps", default=[30,60], type=int, nargs="+",
 					help="steps to decay learning rate")
-parser.add_argument("--use_policy", default=0, type=int,
-					help="policy for getting decay of learning rate")
 parser.add_argument("--use_trained_model", default=1, type=int,
 					help="whether use the pre-trained model on kinetics or not")
-parser.add_argument("--model", default="P3D",  choices=["P3D", "C3D","I3D"],
-					help="which machine to run the code. choice from ye_home and marcc")
 parser.add_argument("--random", default=0,  type=int,
 					help="random sapmling in training")
 parser.add_argument("--test", default=0,  type=int,
-					help="whether get into the whole test mode")
+					help="whether get into the whole test mode (not recommend) ")
 parser.add_argument("--stop", default=0.8, type=float,
 					help="Perform early stop")
 parser.add_argument("--tcn_range", default=0, type=int,
@@ -77,37 +73,21 @@ parser.add_argument("--tcn_range", default=0, type=int,
 parser.add_argument("--downsample", default=1,  type=int,
 					help="downsample rate for stages")
 parser.add_argument("--region", default=0,  type=int,
-					help="downsample rate for stages")
-
-def adjust_learning_rate(optimizer, epoch, lr_steps):
-	"""Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-	decay = 0.1 ** (sum(epoch >= np.array(lr_steps)))
-	lr = options.learning_rate * decay
-	for param_group in optimizer.param_groups:
-		param_group['lr'] = lr * param_group['lr_mult']
-		param_group['weight_decay'] = decay * param_group['decay_mult']
+					help="1 or 2. 1 is stage 0, 1, 2, 3 (without sending); 2 is stage 0, 1, 2 (without entering into water and ending)")
 
 
 def main(options):
-	# Path configuration
-
-
 
 	# Path to the directories of features and labels
-	train_file = './training_idx.npy'
-	test_file = './testing_idx.npy'
+	train_file = './data_files/training_idx.npy'
+	test_file = './data_files/testing_idx.npy'
 	data_folder = './frames'
-	range_file = './tcn_time_point.npy'
+	range_file = './data_files/tcn_time_point.npy'
 	if options.task == "score":
-		label_file = './overall_scores.npy'
+		label_file = './data_files/overall_scores.npy'
 	else:
-		label_file = './difficulty_level.npy'
+		label_file = './data_files/difficulty_level.npy'
 
-	if options.model=="C3D":
-		options.size = 112
-	if options.model=="I3D":
-		options.size = 224
-		
 	if options.normalize:
 		transformations = transforms.Compose([transforms.Scale((options.size,options.size)),
 										transforms.ToTensor(),
@@ -134,7 +114,7 @@ def main(options):
 							 )
 
 	test_loader = DataLoader(dset_test,
-							 batch_size = options.batch_size,
+							 batch_size = int(options.batch_size/2),
 							 shuffle = False,
 							 )
 
@@ -143,25 +123,10 @@ def main(options):
 		#cuda.set_device(int(options.gpuid[0]))
 	
 	# Initial the model
-	if options.model=="P3D":
-		if options.use_trained_model:
-			model = P3D199(pretrained=True,num_classes=400)
-		else:
-			model = P3D199(pretrained=False,num_classes=400)
-	elif options.model=="C3D":
-		if options.use_trained_model:
-			model = C3D()
-			model.load_state_dict(torch.load('c3d.pickle'))
-		else:
-			model = C3D()
-	elif options.model=="I3D":
-		if options.use_trained_model:
-			model = I3D(num_classes=400, modality='rgb')
-			model.load_state_dict(torch.load('model_rgb.pth'))
-		else:
-			model = I3D(num_classes=101, modality='rgb')
+	if options.use_trained_model:
+		model = P3D199(pretrained=True,num_classes=400)
 	else:
-		logging.error("No such model: {0}".format(options.model))
+		model = P3D199(pretrained=False,num_classes=400)
 		
 	for param in model.parameters():
 		param.requires_grad = True
@@ -171,8 +136,7 @@ def main(options):
 		for param in model.parameters():
 			param.requires_grad = False
 
-	model = transfer_model(model,num_classes=1, model_type=options.model)
-	# logging.info("fc size is: {0}".format(model.fc))
+	model = transfer_model(model,num_classes=1, model_type="P3D")
 
 	if use_cuda > 0:
 		model.cuda()
@@ -182,29 +146,20 @@ def main(options):
 
 	if options.load:
 		logging.info("=> loading checkpoint"+str(options.load)+".tar")
-		checkpoint = torch.load('checkpoint'+str(options.load)+'.tar')
+		checkpoint = torch.load('./models/checkpoint'+str(options.load)+'.tar')
 		start_epoch = checkpoint['epoch']
 		model.load_state_dict(checkpoint['state_dict'])
 
-
-	# criterion = torch.nn.CrossEntropyLoss()
 	criterion = nn.MSELoss()
 
 	if options.only_last_layer:
 		optimizer = eval("torch.optim." + options.optimizer)(model.fc.parameters(), lr=options.learning_rate)
 	else:
 		if options.optimizer=="SGD":
-			if options.use_policy:
-				policies = get_optim_policies(model=model,modality='RGB',enable_pbn=True)
-				optimizer = torch.optim.SGD(policies,
-											options.learning_rate,
-											momentum=0.9,
-											weight_decay=5e-4)
-			else:
-				optimizer = torch.optim.SGD(model.parameters(),
-							options.learning_rate,
-							momentum=0.9,
-							weight_decay=5e-4)
+			optimizer = torch.optim.SGD(model.parameters(),
+						options.learning_rate,
+						momentum=0.9,
+						weight_decay=5e-4)
 		else:
 			optimizer = eval("torch.optim." + options.optimizer)(model.parameters(), lr=options.learning_rate)
 
@@ -216,10 +171,7 @@ def main(options):
 		for epoch_i in range(0, options.epochs):
 			logging.info("At {0}-th epoch.".format(epoch_i))
 			
-			if len(options.lr_steps)>0 and options.use_policy and options.optimizer=="SGD":
-					adjust_learning_rate(optimizer, epoch_i, options.lr_steps)
-			else:
-				scheduler.step()
+			scheduler.step()
 
 			train_loss = 0.0
 			all_train_output = []
@@ -234,11 +186,9 @@ def main(options):
 
 				model.train()
 
-				if options.model == "I3D" or options.model == "P3D":
-					train_output = model(vid_tensor)
-					train_output = train_output[0]
-				else:
-					train_output = model(vid_tensor)
+				train_output = model(vid_tensor)
+				train_output = train_output[0]
+
 
 				all_train_output = np.append(all_train_output, train_output.data.cpu().numpy()[:,0])
 				all_labels = np.append(all_labels, labels.data.cpu().numpy())
@@ -263,7 +213,7 @@ def main(options):
 					'epoch': epoch_i + 1,
 					'state_dict': model.state_dict(),
 					'optimizer' : optimizer.state_dict(),
-					}, 'checkpoint'+str(options.save)+'.tar' )
+					}, './models/checkpoint'+str(options.save)+'.tar' )
 
 
 			# # main test loop
@@ -278,11 +228,8 @@ def main(options):
 				else:
 					vid_tensor, labels = Variable(vid_tensor), Variable(labels)
 
-				if options.model == "I3D" or options.model == "P3D":
-					test_output = model(vid_tensor)
-					test_output = test_output[0]
-				else:
-					test_output = model(vid_tensor)
+				test_output = model(vid_tensor)
+				test_output = test_output[0]
 
 				all_test_output = np.append(all_test_output, test_output.data.cpu().numpy()[:,0])
 				all_labels = np.append(all_labels, labels.data.cpu().numpy())
@@ -315,11 +262,8 @@ def main(options):
 			else:
 				vid_tensor, labels = Variable(vid_tensor), Variable(labels)
 
-			if options.model == "I3D" or options.model == "P3D":
-				test_output = model(vid_tensor)
-				test_output = test_output[0]
-			else:
-				test_output = model(vid_tensor)
+			test_output = model(vid_tensor)
+			test_output = test_output[0]
 
 			all_test_output = np.append(all_test_output, test_output.data.cpu().numpy()[:,0])
 			all_labels = np.append(all_labels, labels.data.cpu().numpy())
@@ -327,13 +271,9 @@ def main(options):
 			loss = criterion(test_output, labels)
 			test_loss += loss.data[0]
 
-			# for i in range(len(labels.data.cpu().numpy())):
-			# 	logging.info("{0}-{1}".format(test_output.data.cpu().numpy()[i][0], labels.data.cpu().numpy()[i]))
-
-			# logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
 
 		test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
-		# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
+
 
 		rho, p_val = spearmanr(all_test_output, all_labels)
 		logging.info("Average test loss value per instance is {0}, the corr is {1}".format(test_avg_loss, rho))
@@ -361,11 +301,8 @@ def main(options):
 				else:
 					vid_tensor = Variable(vid_tensor)
 
-				if options.model == "I3D" or options.model == "P3D":
-					test_output = model(vid_tensor)
-					test_output = test_output[0]
-				else:
-					test_output = model(vid_tensor)
+				test_output = model(vid_tensor)
+				test_output = test_output[0]
 
 				score += test_output.data.cpu().numpy()[:,0][0]
 
@@ -374,17 +311,8 @@ def main(options):
 			all_test_output = np.append(all_test_output, score)
 			all_labels = np.append(all_labels, labels.data.cpu().numpy())
 
-			# score = torch.autograd.Variable(torch.from_numpy(score))
-			# loss = criterion(score, labels)
-			# test_loss += loss.data[0]
-
 			for i in range(len(labels.data.cpu().numpy())):
 				logging.info("{0}-{1}".format(test_output.data.cpu().numpy()[i][0], labels.data.cpu().numpy()[i]))
-
-			# logging.info("loss at batch {0}: {1}".format(it, loss.data[0]))
-
-		# test_avg_loss = test_loss / (len(dset_test) / options.batch_size)
-		# logging.info("Average test loss value per instance is {0}".format(test_avg_loss))
 
 		rho, p_val = spearmanr(all_test_output, all_labels)
 		logging.info("the corr is {0}".format(rho))

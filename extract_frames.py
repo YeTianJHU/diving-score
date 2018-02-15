@@ -29,8 +29,8 @@ def collect_files(dir_name, file_ext=".mp4", sort_files=True):
 ##############################################################################################################
 def main(args=None, parser=None):
 
-	data_dir = '/data/xiang/diving-score/diving_samples_len_ori'
-	images_dir = '/data/xiang/diving-score/frames'
+	data_dir = './diving_samples_len_ori'
+	images_dir = './frames'
 
 
 	folder = images_dir

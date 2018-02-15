@@ -28,8 +28,8 @@ warnings.filterwarnings("ignore")
 
 # Path to the directories of features and labels
 data_dir = './resFeatures'
-label_dir = './time_span.npy'
-feature_file = './resnet_feature.npy'
+label_dir = './data_files/time_span.npy'
+feature_file = './data_files/resnet_feature.npy'
 #######################################################################
 
 def to_vector(mat):
@@ -156,7 +156,7 @@ def TCN_LSTM(n_nodes, pool_sizes, conv_lens, n_classes, n_feat, max_len,
 	for i in range(n_layers):
 		# Pad beginning of sequence to prevent usage of future data
 		if causal: model = ZeroPadding1D((conv_lens[i]//2,0))(model)
-		model = Convolution1D(n_nodes[i], conv_lens[i], border_mode='same')(model) + model
+		model = Convolution1D(n_nodes[i], conv_lens[i], border_mode='same')(model)
 		if causal: model = Cropping1D((0,conv_lens[i]//2))(model)
 
 		model = SpatialDropout1D(0.3)(model)
@@ -227,20 +227,17 @@ def train_model(model, max_len, get_cross_validation=False):
 	# np.set_printoptions(threshold='nan')
 
 	if model == ED_TCN:
-		n_nodes = [512, 512]# 1024]
+		n_nodes = [256, 512]# 1024]
 		pool_sizes = [2, 2]# 2]
-		conv_lens = [3, 5]# 10]
+		conv_lens = [10, 10]# 10]
 		causal = False
-		# model = ED_TCN(n_nodes, pool_sizes, conv_lens, 5, 2048, max_len, 
-		# 	causal=causal, activation='norm_relu', optimizer='rmsprop')
+		model = ED_TCN(n_nodes, pool_sizes, conv_lens, 5, 2048, max_len, 
+			causal=causal, activation='norm_relu', optimizer='rmsprop')
 		# model.summary()
 		# model = bi_lstm()
-		model = TCN_LSTM(n_nodes, pool_sizes, conv_lens, 5, 2048, max_len, 
-			causal=causal, activation='norm_relu', optimizer='rmsprop')
+		# model = TCN_LSTM(n_nodes, pool_sizes, conv_lens, 5, 2048, max_len, 
+		# 	causal=causal, activation='norm_relu', optimizer='rmsprop')
 
-	# loss = np.zeros((4))
-	# acc = np.zeros((4))
-	# classes = np.zeros((200,max_len, 2))
 
 	if get_cross_validation == False:
 		
@@ -251,59 +248,11 @@ def train_model(model, max_len, get_cross_validation=False):
 		x_train, x_test, y_train, y_test = cross_validation.train_test_split(x,y_cat,test_size=0.2, random_state=1)
 		print (x_train.shape)
 		model.fit(x_train,y_train, validation_data=[x_test,y_test],epochs=30)
-		# loss_and_metrics = model.evaluate(x_test,y_test)
 
-		# # loss_mean = loss_and_metrics[0]
-		# # acc_mean  = loss_and_metrics[1]
 		classes = model.predict(x)
 
-		np.save('tcn_output2', classes)
-
-
-		# classes1 = to_vector(classes[2])
-		# classes2 = to_vector(classes[3])
-		# classes3 = to_vector(classes[5])
-		# classes4 = to_vector(classes[6])
-		# classes5 = to_vector(classes[7])
-		# print (classes.shape)
-		# print (classes1)
-		# print (classes2)
-		# print (classes3)
-		# print (classes4)
-		# print (classes5)
-
-	# elif get_cross_validation == True:
-	# 	y_cat = np_utils.to_categorical(y,num_classes=2)
-	# 	y_cat = np.reshape(y_cat, (200, max_len, 2))
-	# 	x_train_cro, y_train_cro, x_test_cro, y_test_cro = train.set_cross_validation(x, y_cat)
-	# 	for i in range(4):
-	# 		print i
-	# 		model.fit(x_train_cro[i], y_train_cro[i],batch_size=20)
-	# 		loss_and_metrics = model.evaluate(x_test_cro[i], y_test_cro[i]) 
-	# 		loss[i] = loss_and_metrics[0]
-	# 		acc[i]  = loss_and_metrics[1]
-	# 		classes[i*50:(i+1)*50] = model.predict(x_test_cro[i])
-	# 	loss_mean = np.mean(loss)
-	# 	acc_mean = np.mean(acc)
-	# 	y_test = y_cat
-	# print 'loss_mean: ', loss_mean, ' ', 'acc_mean: ', acc_mean
-	# return loss_mean, acc_mean, classes, y_test
+		np.save('./data_files/tcn_output2', classes)
 
 
 if __name__ == '__main__':
 	train_model(ED_TCN, 160, get_cross_validation=False)
-	# loss_mean, acc_mean, classes, y_cat = train_model(ED_TCN, 160, get_cross_validation=False)
-	# y_cat = np.reshape(y_cat, (y_cat.shape[0]*y_cat.shape[1], y_cat.shape[2]))
-	# classes = np.reshape(classes, (classes.shape[0]*classes.shape[1], classes.shape[2]))
-	# y_test = o_vector(y_cat)
-	# classes = to_vector(classes)
-
-	# print 'ground truth: ', y_test[:100]
-	# print 'predict: ', classes[:100]
-
-	# cnf_matrix = sklearn.metrics.confusion_matrix(y_test, classes)
-
-	# plt.figure()
-	# train.plot_confusion_matrix(cnf_matrix,classes=[0,1], normalize=True,
-	# 											title='Confusion matrix, with normalization')
-	# plt.show()
