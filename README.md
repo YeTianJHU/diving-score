@@ -44,4 +44,5 @@ Models with weights can be downloaded from [google drive](https://drive.google.c
 - The ED-TCN model is revised from [ED-TCN](https://github.com/colincsl/TemporalConvolutionalNetworks) by colincsl.
 
 ### Contact
-If there are any questions, please contact Ye Tian [ytian27(at)jhu.edu] or Xiang Xiang [xxiang(at)cs.jhu.edu]. (please replace (at) with @)
+If there are any questions, please contact Ye Tian [ytian27(at)jhu.edu] or Xiang Xiang [xxiang(at)cs.jhu.edu]. 
+(please replace (at) with @)
