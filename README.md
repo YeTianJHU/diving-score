@@ -46,4 +46,13 @@ Models with weights can be downloaded from [google drive](https://drive.google.c
 ### Contact
 If there are any questions, please contact Ye Tian [ytian27(at)jhu.edu] or Xiang Xiang [xxiang(at)cs.jhu.edu]. 
 
+### Please cite
+
+@article{s3d,//
+  title={S3D: Stacking Segment-level P3D for Action Quality Assessment},//
+  author={Xiang Xiang, Ye Tian, Austin Reiter, Gregory D Hager, Trac D Tran},
+  journal={ResearchGate preprint:10.13140/RG.2.2.19942.11847},
+  year={2018}
+}
+
 (please replace (at) with @)
