@@ -57,5 +57,5 @@ Models with weights can be downloaded from [google drive](https://drive.google.c
 }
 
 ### Contact
-If there are any questions, please contact Ye Tian [ytian27(at)jhu.edu] or Xiang Xiang [xxiang(at)cs.jhu.edu]
-(please replace (at) with @)
+If there are any questions, please contact Ye Tian [ytian27@jhu.edu] or Xiang Xiang [xxiang@cs.jhu.edu]
+
