@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-feature_path = '.tcn_p3d_features'
+feature_path = './tcn_p3d_features'
 train_file = './data_files/training_idx.npy'
 test_file = './data_files/testing_idx.npy'
 # label_file = './data_files/difficulty_level.npy'
@@ -24,7 +24,7 @@ label = np.load(label_file)[0]
 x_train_score = []
 x_train_feature = []
 y_train = []
-
+x_train_feature_all= []
 
 for i in training_idx:
 	i = int(i)
@@ -40,22 +40,25 @@ for i in training_idx:
 	score = [feature1[1],feature2[1],feature3[1],feature4[1]]
 
 	feature = [feature1[0],feature2[0],feature3[0],feature4[0]]
+	feature_all = np.concatenate((feature1[0],feature2[0],feature3[0],feature4[0]),axis=0)
 	feature = np.mean(feature, axis=0)
-	print feature.shape
+	print feature.shape, feature_all.shape
+	# print feature.shape
 	x_train_score.append(score)
 	x_train_feature.append(feature)
-
+	x_train_feature_all.append(feature_all)
 	y_train.append(label[i-1])
 	print score, label[i-1]
 print len(x_train_score), len(y_train)
 # print x_train_score[0].shape, y_train[0].shape
-all_stuff = [x_train_feature,x_train_score,y_train]
+all_stuff = [x_train_feature,x_train_score,y_train, x_train_feature_all]
 np.save('./data_files/all_train_v2.npy',all_stuff)
 
 
 x_test_score = []
 x_test_feature = []
 y_test = []
+x_test_feature_all= []
 for i in testing_idx:
 	i = int(i)
 	feature_file1 = join(feature_path,"{:03d}_1.npy".format(i))
@@ -72,14 +75,16 @@ for i in testing_idx:
 	score = [feature1[1],feature2[1],feature3[1],feature4[1]]
 
 	feature = [feature1[0],feature2[0],feature3[0],feature4[0]]
+	feature_all = np.concatenate((feature1[0],feature2[0],feature3[0],feature4[0]),axis=0)
 	feature = np.mean(feature, axis=0)
-	print feature.shape
+	print feature.shape, feature_all.shape
 	x_test_score.append(score)
 	x_test_feature.append(feature)
+	x_test_feature_all.append(feature_all)
 
 	y_test.append(label[i-1])
 	print score, label[i-1]
 print len(x_test_score), len(y_test)
 # print x_test_score[0].shape, y_test[0].shape
-all_stuff = [x_test_feature,x_test_score,y_test]
+all_stuff = [x_test_feature,x_test_score,y_test, x_test_feature_all]
 np.save('./data_files/all_test_v2.npy',all_stuff)

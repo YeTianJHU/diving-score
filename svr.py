@@ -34,6 +34,12 @@ test_data = np.array(np.load(test_file))
 x_train = np.array(train_data[0])
 x_test = np.array(test_data[0])
 
+print train_data.shape
+
+# if using the concated feature, uncomment this
+# x_train = np.array(train_data[-1])
+# x_test = np.array(test_data[-1])
+
 y_train = np.array(train_data[2])
 y_test = np.array(test_data[2])
 
