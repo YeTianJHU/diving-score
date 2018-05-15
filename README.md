@@ -41,7 +41,21 @@ Models with weights can be downloaded from [google drive](https://drive.google.c
     
 ### Acknowledgement
 - The P3D model (with weights pre-trained on kinetics) is revised from [P3D-Pytorch](https://github.com/qijiezhao/pseudo-3d-pytorch) by qijiezhao.
-- The ED-TCN model is revised from [ED-TCN](https://github.com/colincsl/TemporalConvolutionalNetworks) by colincsl.
+- The ED-TCN model is revised from [ED-TCN](https://github.com/colincsl/TemporalConvolutionalNetworks) by colincsl. 
+
+### Please cite
+@article{s3d,
+
+  title={S3D: Stacking Segment-level P3D for Action Quality Assessment},
+
+  author={Xiang Xiang, Ye Tian, Austin Reiter, Gregory D Hager, Trac D Tran},
+  
+  journal={ResearchGate preprint:10.13140/RG.2.2.19942.11847},
+  
+  year={2018}
+
+}
 
 ### Contact
-If there are any questions, please contact me at tytian@outlook.com.
+If there are any questions, please contact Ye Tian [ytian27@jhu.edu] or Xiang Xiang [xxiang@cs.jhu.edu]
+
