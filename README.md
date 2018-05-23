@@ -44,13 +44,13 @@ Models with weights can be downloaded from [google drive](https://drive.google.c
 - The ED-TCN model is revised from [ED-TCN](https://github.com/colincsl/TemporalConvolutionalNetworks) by colincsl. 
 
 ### Please cite
-@article{s3d,
+@inproceedings{s3d,
 
   title={S3D: Stacking Segment-level P3D for Action Quality Assessment},
 
-  author={Xiang Xiang, Ye Tian, Austin Reiter, Gregory D Hager, Trac D Tran},
+  author={Xiang Xiang and Ye Tian and Austin Reiter and Gregory D. Hager and Trac D. Tran},
   
-  journal={ResearchGate preprint:10.13140/RG.2.2.19942.11847},
+  booktitle={IEEE ICIP},
   
   year={2018}
 
