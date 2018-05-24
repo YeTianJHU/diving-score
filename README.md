@@ -1,4 +1,4 @@
-# Stacking Segment-level P3D for Action Quality Assessment
+# Stacking Segmental P3D for Action Quality Assessment
 
 ### Introduction
 This repository contains the implementation, models and data (lebel file) for [S3D: Stacking Segment-level P3D for Action Quality Assessment](https://www.researchgate.net/publication/323074943_S3D_Fusing_Segment-level_P3D_for_Action_Quality_Assessment).
@@ -46,7 +46,7 @@ Models with weights can be downloaded from [google drive](https://drive.google.c
 ### Please cite
 @inproceedings{s3d,
 
-  title={S3D: Stacking Segment-level P3D for Action Quality Assessment},
+  title={S3D: Stacking Segmental P3D for Action Quality Assessment},
 
   author={Xiang Xiang and Ye Tian and Austin Reiter and Gregory D. Hager and Trac D. Tran},
   
