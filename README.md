@@ -1,7 +1,7 @@
 # Stacking Segmental P3D for Action Quality Assessment
 
 ### Introduction
-This repository contains the implementation, models and data (lebel file) for [S3D: Stacking Segment-level P3D for Action Quality Assessment](https://www.researchgate.net/publication/323074943_S3D_Fusing_Segment-level_P3D_for_Action_Quality_Assessment).
+This repository contains the implementation, models and data (lebel file) for [S3D: Stacking Segmental P3D for Action Quality Assessment](https://www.researchgate.net/publication/323074943_S3D_Fusing_Segment-level_P3D_for_Action_Quality_Assessment): https://ieeexplore.ieee.org/abstract/document/8451364/.
 
 ### Requirements:
 - PyTorch (with python 3.6)
